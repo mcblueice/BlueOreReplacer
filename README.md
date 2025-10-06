@@ -1,6 +1,6 @@
 # BlueOreReplacer
 
-一個用於 Paper 伺服器的自動礦物回填與偵測外掛
+一個用於 Paper 伺服器的礦物代換插件
 
 ## 功能特色
 
