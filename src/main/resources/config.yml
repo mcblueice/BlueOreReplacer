@@ -1,0 +1,100 @@
+ChunkCache:
+  SaveInterval: 30
+NearbyOreCheckRadius: 3
+OresGeneration:
+  world:
+    COAL_ORE:
+      enabled: true
+      chance: 1
+    DEEPSLATE_COAL_ORE:
+      enabled: true
+      chance: 1
+    COPPER_ORE:
+      enabled: true
+      chance: 1
+    DEEPSLATE_COPPER_ORE:
+      enabled: true
+      chance: 1
+    IRON_ORE:
+      enabled: true
+      chance: 1
+    DEEPSLATE_IRON_ORE:
+      enabled: true
+      chance: 1
+    GOLD_ORE:
+      enabled: true
+      chance: 1
+    DEEPSLATE_GOLD_ORE:
+      enabled: true
+      chance: 1
+    LAPIS_ORE:
+      enabled: true
+      chance: 1
+    DEEPSLATE_LAPIS_ORE:
+      enabled: true
+      chance: 1
+    REDSTONE_ORE:
+      enabled: true
+      chance: 1
+    DEEPSLATE_REDSTONE_ORE:
+      enabled: true
+      chance: 1
+    DIAMOND_ORE:
+      enabled: true
+      chance: 1
+    DEEPSLATE_DIAMOND_ORE:
+      enabled: true
+      chance: 1
+    EMERALD_ORE:
+      enabled: true
+      chance: 1
+    DEEPSLATE_EMERALD_ORE:
+      enabled: true
+      chance: 1
+  world_nether:
+    ANCIENT_DEBRIS:
+      enabled: true
+      chance: 1
+    NETHER_QUARTZ_ORE:
+      enabled: true
+      chance: 1
+    NETHER_GOLD_ORE:
+      enabled: true
+      chance: 1
+  world_the_end: []
+
+UndergroundBlocks:
+  - DIRT
+  - CLAY
+  - GRAVEL
+  - STONE
+  - DEEPSLATE
+  - GRANITE
+  - DIORITE
+  - ANDESITE
+  - TUFF
+  - BEDROCK
+  - COAL_ORE
+  - DEEPSLATE_COAL_ORE
+  - IRON_ORE
+  - DEEPSLATE_IRON_ORE
+  - COPPER_ORE
+  - DEEPSLATE_COPPER_ORE
+  - GOLD_ORE
+  - DEEPSLATE_GOLD_ORE
+  - LAPIS_ORE
+  - DEEPSLATE_LAPIS_ORE
+  - REDSTONE_ORE
+  - DEEPSLATE_REDSTONE_ORE
+  - EMERALD_ORE
+  - DEEPSLATE_EMERALD_ORE
+  - DIAMOND_ORE
+  - DEEPSLATE_DIAMOND_ORE
+  - NETHERRACK
+  - SOUL_SAND
+  - BASALT
+  - SMOOTH_BASALT
+  - BLACKSTONE
+  - ANCIENT_DEBRIS
+  - NETHER_QUARTZ_ORE
+  - NETHER_GOLD_ORE

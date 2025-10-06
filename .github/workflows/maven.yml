@@ -1,0 +1,30 @@
+name: "Maven 編譯"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: "取得程式碼"
+      uses: actions/checkout@v4
+
+    - name: "安裝 JDK21"
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: "使用 Maven 編譯"
+      run: mvn clean package -B
+
+    - name: "上傳所有 JAR"
+      uses: actions/upload-artifact@v4
+      with:
+        name: "所有 JAR"
+        path: target/*.jar

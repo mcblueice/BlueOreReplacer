@@ -1,0 +1,24 @@
+name: BlueOreReplacer
+version: '${project.version}'
+main: net.mcblueice.blueorereplacer.BlueOreReplacer
+api-version: 1.20
+author: Blue
+description: "礦物替換插件"
+prefix: BlueOreReplacer
+softdepend: [PlaceholderAPI]
+folia-supported: true
+commands:
+  blueoreplacer:
+    description: BlueOreReplacer main command
+    usage: "/blueoreplacer reload | /blueoreplacer check <X> <Y> <Z> [world] | /blueoreplacer debug | /blueoreplacer clear [X] [Y] [Z] [world] | /blueoreplacer simulate <OreType> [Y] [BiomeMode]"
+
+permissions:
+  blueoreplacer.reload:
+    description: 重新載入設定檔
+    default: op
+  blueoreplacer.check:
+    description: 允許檢查座標方塊是否為人工方塊
+    default: op
+  blueoreplacer.debug:
+    description: 切換調試模式
+    default: op

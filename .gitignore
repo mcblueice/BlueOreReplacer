@@ -1,0 +1,37 @@
+# Eclipse stuff
+/.classpath
+/.project
+/.settings
+
+# NetBeans
+/nbproject
+/build.xml
+
+# vim
+.*.sw[a-breweryPlugin]
+
+# vscode
+/.vscode
+
+# IntelliJ
+/.idea/*.xml
+/.idea/modules
+/.idea/shelf
+/*.iml
+
+# various other potential build files
+/build
+/bin
+/dist
+/*.jardesc
+
+# Mac filesystem dust
+.DS_Store
+
+# maven
+/target
+/dependency-reduced-pom.xml
+
+# Gradle
+.gradle/
+run/
