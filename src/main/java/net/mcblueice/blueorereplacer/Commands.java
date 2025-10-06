@@ -151,7 +151,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                         }
                         player = (Player) sender;
                         boolean on = plugin.toggleCheckMode(player.getUniqueId());
-                        sender.sendMessage(on ? PREFIX + "§a已開啟檢查模式: §e右鍵檢查方塊 §6蹲下右鍵顯示區塊資料" : PREFIX + "§c已關閉檢查模式");
+                        sender.sendMessage(PREFIX + "§b檢查模式" + (on ? "§a已開啟 §7(§e右鍵檢查方塊 §6蹲下右鍵顯示區塊資料§7)" : "§c已關閉"));
                         return true;
                     }
 
