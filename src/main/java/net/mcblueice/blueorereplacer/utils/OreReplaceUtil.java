@@ -11,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
 import net.mcblueice.blueorereplacer.BlueOreReplacer;
+import net.mcblueice.blueorereplacer.utils.GenericUtil.BiomeMode;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.OreSelection;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.OreType;
 
@@ -131,6 +132,12 @@ public class OreReplaceUtil {
 		target.setType(result, false);
 		tracker.markModified(target);
 		int veinSize = Math.max(1, selection.veinSize());
+		if (selectedType == OreType.COPPER_ORE) {
+			BiomeMode biomeMode = GenericUtil.getBiomeMode(loc);
+			if (biomeMode == BiomeMode.DRIPSTONE || biomeMode == BiomeMode.MOUNTAIN_DRIPSTONE) {
+				veinSize *= 2;
+			}
+		}
 		tryReplaceVein(target, exclude, veinSize);
 	}
 

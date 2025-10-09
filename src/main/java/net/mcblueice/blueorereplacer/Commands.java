@@ -98,7 +98,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                             return;
                         }
                         double pctEff = Math.max(0, prob) * 100.0;
-                        Integer veinSize = OreSimulateUtil.getFeatureVeinSize(featureName);
+                        Integer veinSize = OreSimulateUtil.getFeatureVeinSize(featureName, Loc, biomeMode);
                         sender.sendMessage(PREFIX + "§b模擬結果 §7| §e特徵: §6" + featureName
                                 + " §7| §3世界: §b" + world.getName()
                                 + " §7| §d生態域: §5" + biomeMode.name().toLowerCase()

@@ -115,9 +115,8 @@ public class OreSimulateUtil {
         features.add(new OreFeature("iron_high", OreType.IRON_ORE, 9, 90, 80, 256, 80, 384, "tri", 0.9, 3, "generic", 1.0));
         features.add(new OreFeature("iron_alt", OreType.IRON_ORE, 9, 10, -64, 72, -64, 72, "uniform", 0.9, 3, "generic", 1.0));
 
-        // 銅礦: 主分佈(三角) + 滴洞覆蓋(三角)
+        // 銅礦: 主分佈(三角)
         features.add(new OreFeature("copper_main", OreType.COPPER_ORE, 10, 16, -16, 112, -16, 112, "tri", 0.9, 3, "generic", 1.0));
-        // features.add(new OreFeature("copper_dripstone", OreType.COPPER_ORE, 20, 16, -16, 112, -16, 112, "tri", 0.9, 3, "dripstone", 1.0));
 
         // 金礦: 主分佈(三角) + 惡地附加(平均)
         features.add(new OreFeature("gold_main", OreType.GOLD_ORE, 9, 4, -64, 32, -64, 32, "tri", 0.9, 3, "generic", 1.0));
@@ -243,9 +242,24 @@ public class OreSimulateUtil {
     }
 
     public static Integer getFeatureVeinSize(String featureName) {
+        return getFeatureVeinSize(featureName, null, null);
+    }
+
+    public static Integer getFeatureVeinSize(String featureName, Location loc, BiomeMode overrideBiomeMode) {
         if (featureName == null || featureName.isEmpty()) return null;
         for (OreFeature feature : BASE_FEATURE_SET) {
-            if (feature.name.equalsIgnoreCase(featureName)) return feature.veinSize;
+            if (!feature.name.equalsIgnoreCase(featureName)) continue;
+            int size = feature.veinSize;
+            BiomeMode biomeMode = overrideBiomeMode;
+            if (biomeMode == null && loc != null) {
+                biomeMode = GenericUtil.getBiomeMode(loc);
+            }
+            if (feature.ore == OreType.COPPER_ORE && biomeMode != null) {
+                if (biomeMode == BiomeMode.DRIPSTONE || biomeMode == BiomeMode.MOUNTAIN_DRIPSTONE) {
+                    size *= 2;
+                }
+            }
+            return size;
         }
         return null;
     }
