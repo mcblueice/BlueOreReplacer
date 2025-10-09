@@ -1,6 +1,9 @@
 package net.mcblueice.blueorereplacer.utils;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.block.BlockFace;
 
 public final class GenericUtil {
@@ -31,7 +34,15 @@ public final class GenericUtil {
         DRIPSTONE,      // 滴石
         MOUNTAIN_DRIPSTONE, // 山地+滴石
         // NETHER
-        NETHER
+        NETHER,
+        // THE_END
+        THE_END
+    }
+
+    public record OreSelection(OreType oreType, int veinSize, String featureName) {
+        public OreSelection(OreType oreType, int veinSize) {
+            this(oreType, veinSize, null);
+        }
     }
 
     public static String FaceToChinese(BlockFace face) {
@@ -39,28 +50,28 @@ public final class GenericUtil {
         switch (face) {
             case UP: return "上";
             case DOWN: return "下";
-
             case NORTH: return "北";
             case SOUTH: return "南";
             case EAST: return "東";
             case WEST: return "西";
-
-            case NORTH_EAST: return "東北";
-            case NORTH_WEST: return "西北";
-            case SOUTH_EAST: return "東南";
-            case SOUTH_WEST: return "西南";
-
-            case WEST_NORTH_WEST: return "西偏北";
-            case NORTH_NORTH_WEST: return "北偏西";
-            case NORTH_NORTH_EAST: return "北偏東";
-            case EAST_NORTH_EAST: return "東偏北";
-            case EAST_SOUTH_EAST: return "東偏南";
-            case SOUTH_SOUTH_EAST: return "南偏東";
-            case SOUTH_SOUTH_WEST: return "南偏西";
-            case WEST_SOUTH_WEST: return "西偏南";
-
             default: return "未知方向";
         }
+    }
+
+    public static BiomeMode getBiomeMode(Location loc) {
+        World world = loc.getWorld();
+        if (world.getEnvironment() == World.Environment.NETHER) return BiomeMode.NETHER;
+        if (world.getEnvironment() == World.Environment.THE_END) return BiomeMode.THE_END;
+        Biome biome = world.getBiome(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        String biomeName = biome.name().toLowerCase();
+        
+        if (biomeName.contains("mountain") || biomeName.contains("peaks") || biomeName.contains("slopes") || biomeName.contains("summit")) {
+            if (biomeName.contains("dripstone")) { return BiomeMode.MOUNTAIN_DRIPSTONE; }
+            return BiomeMode.MOUNTAIN;
+        }
+        if (biomeName.contains("badlands")) { return BiomeMode.BADLANDS; }
+        if (biomeName.contains("dripstone")) { return BiomeMode.DRIPSTONE; }
+        return BiomeMode.NORMAL;
     }
 
     public static String getOreName(OreType oreType, int y) {

@@ -16,8 +16,8 @@ import org.bukkit.World;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
+import net.mcblueice.blueorereplacer.utils.GenericUtil;
 import net.mcblueice.blueorereplacer.utils.OreSimulateUtil;
-import net.mcblueice.blueorereplacer.utils.GenericUtil.OreType;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.BiomeMode;
 import net.mcblueice.blueorereplacer.utils.TaskScheduler;
 
@@ -47,11 +47,9 @@ public class Commands implements CommandExecutor, TabCompleter {
                         return true;
                     }
 
-                    OreType parsedOreType = null;
-                    try { parsedOreType = OreType.valueOf(args[1].toUpperCase()); } catch (IllegalArgumentException ex) {}
-
-                    if (parsedOreType == null) {
-                        sender.sendMessage(PREFIX + "§c未知礦物類型: §e" + args[1]);
+                    String resolvedFeature = OreSimulateUtil.resolveFeatureName(args[1]);
+                    if (resolvedFeature == null) {
+                        sender.sendMessage(PREFIX + "§c未知礦物特徵: §e" + args[1]);
                         return true;
                     }
 
@@ -88,39 +86,24 @@ public class Commands implements CommandExecutor, TabCompleter {
                             return true;
                         }
                     } else {
-                        parsedBiomeMode = OreSimulateUtil.getBiomeModeFromLocation(Loc);
+                        parsedBiomeMode = GenericUtil.getBiomeMode(Loc);
                     }
 
-                    final OreType oreType = parsedOreType;
+                    final String featureName = resolvedFeature;
                     final BiomeMode biomeMode = parsedBiomeMode;
                     Runnable simulateTask = () -> {
-                        Double prob = OreSimulateUtil.calculateOreProbability(Loc, oreType, biomeMode);
+                        Double prob = OreSimulateUtil.calculateFeatureProbability(Loc, featureName, biomeMode);
                         if (prob == null) {
-                            sender.sendMessage(PREFIX + "§7該生態域下此礦物無生成機率: §cN/A");
+                            sender.sendMessage(PREFIX + "§7該生態域下此礦物特徵無生成機率: §cN/A");
                             return;
                         }
-                        java.util.Map<OreType, Double> map = new java.util.EnumMap<>(OreType.class);
-                        double sum = 0.0;
-                        for (OreType ore : OreType.values()) {
-                            Double p = OreSimulateUtil.calculateOreProbability(Loc, ore, biomeMode);
-                            if (p != null && p > 0) {
-                                map.put(ore, p);
-                                sum += p;
-                            }
-                        }
-                        double effective = 0.0;
-                        if (prob > 0) {
-                            if (sum <= 1.0) {
-                                effective = prob;
-                            } else {
-                                effective = prob / sum;
-                            }
-                        }
-                        double pctEff = Math.max(0, Math.min(1, effective)) * 100.0;
-                        sender.sendMessage(PREFIX + "§b模擬結果 §7| §e礦物: §6" + oreType.name()
+                        double pctEff = Math.max(0, prob) * 100.0;
+                        Integer veinSize = OreSimulateUtil.getFeatureVeinSize(featureName);
+                        sender.sendMessage(PREFIX + "§b模擬結果 §7| §e特徵: §6" + featureName
                                 + " §7| §3世界: §b" + world.getName()
                                 + " §7| §d生態域: §5" + biomeMode.name().toLowerCase()
                                 + " §7| §9Y: §a" + ySim
+                                + (veinSize != null ? " §7| §6礦脈大小: §e" + veinSize : "")
                                 + " §7| §6生成機率: §e" + String.format(java.util.Locale.US, "%.3f", pctEff) + "%");
                     };
                     if (player != null) {
@@ -358,9 +341,8 @@ public class Commands implements CommandExecutor, TabCompleter {
             if (!sender.hasPermission("blueoreplacer.debug")) return Collections.emptyList();
 
             if (args.length == 2) {
-                List<String> ores = new ArrayList<>();
-                for (OreType oreType : OreType.values()) ores.add(oreType.name().toLowerCase());
-                StringUtil.copyPartialMatches(args[1], ores, completions);
+                List<String> features = OreSimulateUtil.getFeaturesName();
+                StringUtil.copyPartialMatches(args[1], features, completions);
                 return completions;
             }
 

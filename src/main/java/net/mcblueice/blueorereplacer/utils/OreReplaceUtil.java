@@ -11,7 +11,8 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
 import net.mcblueice.blueorereplacer.BlueOreReplacer;
-import net.mcblueice.blueorereplacer.utils.GenericUtil.OreType;;
+import net.mcblueice.blueorereplacer.utils.GenericUtil.OreSelection;
+import net.mcblueice.blueorereplacer.utils.GenericUtil.OreType;
 
 public class OreReplaceUtil {
 
@@ -113,29 +114,31 @@ public class OreReplaceUtil {
 		}
 
 		Location loc = target.getLocation();
-		OreType selected = OreSimulateUtil.getMostLikelyOre(target);
+		OreSelection selection = OreSimulateUtil.getMostLikelyOre(target);
 
-		if (selected == null) {
+		if (selection == null) {
 			if (hideOres(target)) return;
 			plugin().sendDebug("  §7未骰中任何礦石");
 			return;
 		}
 
-		String oreName = GenericUtil.getOreName(selected, loc.getBlockY());
+		OreType selectedType = selection.oreType();
+		String oreName = GenericUtil.getOreName(selectedType, loc.getBlockY());
 		Material result = Material.matchMaterial(oreName);
 
-		plugin().sendDebug("  §6替換礦石: §7" + result.name());
+		String featureInfo = selection.featureName() != null ? (" §8[" + selection.featureName() + " size=" + selection.veinSize() + "]") : "";
+		plugin().sendDebug("  §6替換礦石: §7" + result.name() + featureInfo);
 		target.setType(result, false);
 		tracker.markModified(target);
-		tryReplaceVein(target, exclude);
+		int veinSize = Math.max(1, selection.veinSize());
+		tryReplaceVein(target, exclude, veinSize);
 	}
 
-	public static void tryReplaceVein(Block target, Block originBlock) {
+	public static void tryReplaceVein(Block target, Block originBlock, int veinSize) {
 		Material startMat = target.getType();
 		if (!isOre(startMat)) return;
-
-		int veinSize = OreSimulateUtil.getVeinSize(target);
 		if (veinSize <= 0) return;
+
 		int size = veinSize;
 		int maxExtraBlocks = Math.max(0, veinSize - 1);
 
@@ -334,8 +337,8 @@ public class OreReplaceUtil {
 		Set<Block> vein = new HashSet<>();
 		queue.add(target);
 		vein.add(target);
-		
-		int maxVeinBlocks = OreSimulateUtil.getVeinSize(target);
+
+		int maxVeinBlocks = 32;
 		while (!queue.isEmpty() && vein.size() < maxVeinBlocks) {
 			Block cur = queue.poll();
 			for (BlockFace face : FACES) {
@@ -439,7 +442,7 @@ public class OreReplaceUtil {
 		visited.add(start);
 		int replaced = 0;
 
-		int maxVeinBlocks = OreSimulateUtil.getVeinSize(start);
+		int maxVeinBlocks = 32;
 		while (!queue.isEmpty() && replaced < maxVeinBlocks) {
 			Block cur = queue.poll();
 			Material curMat = cur.getType();
@@ -460,6 +463,6 @@ public class OreReplaceUtil {
 				}
 			}
 		}
-		plugin().sendDebug("  §7整脈替換完成 共 " + replaced + " 格 (上限=" + maxVeinBlocks + ")");
+		plugin().sendDebug("  §7整脈替換完成 共 " + replaced + " 格");
 	}
 }
