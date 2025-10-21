@@ -50,6 +50,14 @@ public final class TaskScheduler {
             Bukkit.getScheduler().runTaskLater(plugin, task, delay);
         }
     }
+    public static void runAsync(Plugin plugin, Runnable task) {
+        if (plugin == null || task == null) return;
+        try {
+            Bukkit.getAsyncScheduler().runNow(plugin, scheduledTask -> task.run());
+        } catch (NoSuchMethodError | NoClassDefFoundError e) {
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
+        }
+    }
 
     // 玩家
     public static void runTask(Player player, Plugin plugin, Runnable task) { runPlayerTask(player, plugin, task); }

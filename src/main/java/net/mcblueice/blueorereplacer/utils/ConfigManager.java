@@ -42,19 +42,17 @@ public class ConfigManager {
     public String get(String key, Object... args) {
         String text = get(key);
         if (text == null) return "";
-        
-        // 使用正則表達式匹配 %{數字} 格式的佔位符
+
         Pattern pattern = Pattern.compile("%\\{(\\d+)}");
         Matcher matcher = pattern.matcher(text);
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {
-            int index = Integer.parseInt(matcher.group(1)) - 1; // 轉換為數組索引
+            int index = Integer.parseInt(matcher.group(1)) - 1;
             String replacement = (index >= 0 && index < args.length)
                     ? String.valueOf(args[index])
-                    : matcher.group(); // 索引無效時保留原佔位符
-            
-            // 轉義特殊字符後替換
+                    : matcher.group();
+
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(result);

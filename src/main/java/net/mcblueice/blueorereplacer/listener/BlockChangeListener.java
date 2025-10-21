@@ -19,13 +19,14 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 
+import net.mcblueice.blueorereplacer.BlueOreReplacer;
 import net.mcblueice.blueorereplacer.utils.OreReplaceUtil;
 
 
 public class BlockChangeListener implements Listener {
-    private final net.mcblueice.blueorereplacer.BlueOreReplacer plugin;
+    private final BlueOreReplacer plugin;
 
-    public BlockChangeListener(net.mcblueice.blueorereplacer.BlueOreReplacer plugin) {
+    public BlockChangeListener(BlueOreReplacer plugin) {
         this.plugin = plugin;
     }
 

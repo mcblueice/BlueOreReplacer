@@ -25,7 +25,7 @@ public class OreReplaceUtil {
 	private static final BlockFace[] FACES = {BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
 
 	private static final ChunkModificationTracker tracker = plugin().getChunkTracker();
-	
+
 	private static BlueOreReplacer plugin() { return BlueOreReplacer.getInstance(); }
 
 	private static volatile Set<Material> undergroundSetCache;
