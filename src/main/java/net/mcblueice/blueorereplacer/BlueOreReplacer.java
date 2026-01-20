@@ -104,7 +104,7 @@ public final class BlueOreReplacer extends JavaPlugin {
         // player
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!debugModePlayers.contains(player.getUniqueId())) continue;
-            TaskScheduler.runTask(player, this, () -> player.sendMessage("§7§l[§b§l礦物§7§l]§eDEBUG: §7" + message));
+            player.sendMessage("§7§l[§b§l礦物§7§l]§eDEBUG: §7" + message);
         }
     }
 

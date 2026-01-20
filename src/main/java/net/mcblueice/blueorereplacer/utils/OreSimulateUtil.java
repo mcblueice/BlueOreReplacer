@@ -135,9 +135,9 @@ public class OreSimulateUtil {
         features.add(new OreFeature("emerald_mountain", OreType.EMERALD_ORE, 3, 100, -16, 256, -16, 480, "tri", 0.9, 3, "mountain", 1.0));
 
         // 鑽石: 主分佈(三角) + 掩埋分佈(三角) + 大礦分佈(三角) + 中礦分佈(均勻)
-        features.add(new OreFeature("diamond_main", OreType.DIAMOND_ORE, 4, 7, -64, 16, -64, 16, "tri", 0.9, 3, "generic", 0.5));
-        features.add(new OreFeature("diamond_buried", OreType.DIAMOND_ORE, 8, 4, -64, 16, -64, 16, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("diamond_large", OreType.DIAMOND_ORE, 12, 9, -64, 16, -64, 16, "tri", 0.9, 3, "generic", 1.0 / 9.0 * 0.3));
+        features.add(new OreFeature("diamond_main", OreType.DIAMOND_ORE, 4, 7, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 0.5));
+        features.add(new OreFeature("diamond_buried", OreType.DIAMOND_ORE, 8, 4, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("diamond_large", OreType.DIAMOND_ORE, 12, 9, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 1.0 / 9.0 * 0.3));
         features.add(new OreFeature("diamond_medium", OreType.DIAMOND_ORE, 8, 2, -64, -4, -64, -4, "uniform", 0.9, 3, "generic", 0.5));
 
         // 石英礦: 主分佈(平均)
@@ -283,51 +283,51 @@ public class OreSimulateUtil {
      * 根據方塊位置挑選最可能生成的礦種與對應礦脈資訊，供實際替換流程使用。
      */
     public static OreSelection getMostLikelyOre(Block block) {
-        if (block == null) return null; // 只有實際方塊才有機會生成礦物
+        if (block == null) return null;
 
-        Location loc = block.getLocation(); // 取得方塊座標資料，後續需要世界、高度與生物群系資訊
-        BiomeMode biomeMode = GenericUtil.getBiomeMode(loc); // 根據座標判斷當前生物群系模式（地表、地獄、惡地等）
+        Location loc = block.getLocation();
+        BiomeMode biomeMode = GenericUtil.getBiomeMode(loc);
 
-        List<OreFeature> features = BiomeModifiers(BASE_FEATURE_SET, biomeMode); // 過濾出對應生物群系允許的礦石特徵組合
-        if (features.isEmpty()) return null; // 如果當前生物群系沒有任何礦種可用，直接回傳 null
+        List<OreFeature> features = BiomeModifiers(BASE_FEATURE_SET, biomeMode);
+        if (features.isEmpty()) return null;
 
-        Map<OreType, Double> remainingPerOre = new EnumMap<>(OreType.class); // 紀錄每種礦的剩餘可用機率，模擬原版逐步消耗行為
-        List<FeatureCandidate> candidates = new ArrayList<>(); // 收集符合條件的候選特徵，稍後做加權抽選
+        Map<OreType, Double> remainingPerOre = new EnumMap<>(OreType.class);
+        List<FeatureCandidate> candidates = new ArrayList<>();
 
-        for (OreFeature feature : features) { // 遍歷所有符合生物群系的特徵
-            double probability = feature.pBlockLayer(loc); // 計算此特徵在當前高度的生成機率（已套用世界設定）
-            if (probability <= 0) continue; // 若在這高度該特徵沒有產量，跳過
+        for (OreFeature feature : features) {
+            double probability = feature.pBlockLayer(loc);
+            if (probability <= 0) continue;
 
-            double remaining = remainingPerOre.getOrDefault(feature.ore, 1.0); // 取得該礦種目前還剩多少未被消耗的機率
-            if (remaining <= 0) continue; // 若剩餘量耗盡，代表早一步的特徵已經用完機率了，跳過
+            double remaining = remainingPerOre.getOrDefault(feature.ore, 1.0);
+            if (remaining <= 0) continue;
 
-            double weight = remaining * probability; // 將剩餘量與此特徵機率相乘得到此次抽選權重
+            double weight = remaining * probability;
             if (weight > 0) {
-                candidates.add(new FeatureCandidate(feature, feature.veinSize, weight)); // 權重大於 0 才有意義，加入候選清單
+                candidates.add(new FeatureCandidate(feature, feature.veinSize, weight));
             }
 
-            remainingPerOre.put(feature.ore, remaining * (1.0 - probability)); // 更新該礦種剩餘量，模擬原版多特徵相減的行為
+            remainingPerOre.put(feature.ore, remaining * (1.0 - probability));
         }
 
-        double totalWeight = 0.0; // 加總所有候選權重，後面用來歸一化
+        double totalWeight = 0.0;
         for (FeatureCandidate candidate : candidates) {
-            totalWeight += candidate.weight; // 對候選列表逐一相加
+            totalWeight += candidate.weight;
         }
 
-        if (totalWeight <= 0) return null; // 沒有可用權重代表沒有任何礦種能在此高度生成
+        if (totalWeight <= 0) return null;
 
-        double normalizer = Math.max(totalWeight, 1.0); // 避免 totalWeight 小於 1 時造成抽選過度偏差，至少取 1
-        double r = ThreadLocalRandom.current().nextDouble(); // 產生 [0,1) 的隨機值，用於加權抽籤
-        double cumulative = 0.0; // 累計權重比例
+        double normalizer = Math.max(totalWeight, 1.0);
+        double r = ThreadLocalRandom.current().nextDouble();
+        double cumulative = 0.0;
         for (FeatureCandidate candidate : candidates) {
-            cumulative += candidate.weight / normalizer; // 將個別候選的權重轉換成累積機率
-            if (r < cumulative) { // 找出第一個累積值超過隨機數的候選，即為抽選結果
-                OreType oreType = candidate.feature.ore; // 取得當選的礦種
-                if (oreType.name().startsWith("NETHER_") && !block.getType().equals(Material.NETHERRACK)) return null; // 檢查地獄礦物是否對應正確的方塊材質
-                return new OreSelection(oreType, candidate.veinSize, candidate.feature.name); // 回傳包含礦種、礦脈大小與特徵名稱的結果
+            cumulative += candidate.weight / normalizer;
+            if (r < cumulative) {
+                OreType oreType = candidate.feature.ore;
+                if (oreType.name().startsWith("NETHER_") && !block.getType().equals(Material.NETHERRACK)) return null;
+                return new OreSelection(oreType, candidate.veinSize, candidate.feature.name);
             }
         }
 
-        return null; // 正常狀況應已在迴圈內回傳，這裡純粹保險
+        return null;
     }
 }

@@ -15,7 +15,7 @@ public class ChunkListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChunkUnload(ChunkUnloadEvent event) {
         plugin.getChunkTracker().flushAndInvalidate(event.getChunk());
     }
