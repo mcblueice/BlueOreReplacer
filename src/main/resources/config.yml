@@ -1,3 +1,4 @@
+Debug: false
 ChunkCache:
   SaveInterval: 30
 NearbyOreCheckRadius: 3

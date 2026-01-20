@@ -17,13 +17,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 import net.mcblueice.blueorereplacer.utils.GenericUtil;
+import net.mcblueice.blueorereplacer.utils.OreReplaceUtil;
 import net.mcblueice.blueorereplacer.utils.OreSimulateUtil;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.BiomeMode;
 import net.mcblueice.blueorereplacer.utils.TaskScheduler;
 
 public class Commands implements CommandExecutor, TabCompleter {
     private final BlueOreReplacer plugin;
-    private static final String PREFIX = "§7§l[§b§l礦物§7§l]§r";
 
     public Commands(BlueOreReplacer plugin) {
         this.plugin = plugin;
@@ -38,7 +38,7 @@ public class Commands implements CommandExecutor, TabCompleter {
             switch (args[0].toLowerCase()) {
                 case "simulate":
                     if (!sender.hasPermission("blueoreplacer.debug")) {
-                        sender.sendMessage(PREFIX + "§c你沒有權限使用此指令!");
+                        sender.sendMessage(BlueOreReplacer.prefix + "§c你沒有權限使用此指令!");
                         return true;
                     }
 
@@ -49,7 +49,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 
                     String resolvedFeature = OreSimulateUtil.resolveFeatureName(args[1]);
                     if (resolvedFeature == null) {
-                        sender.sendMessage(PREFIX + "§c未知礦物特徵: §e" + args[1]);
+                        sender.sendMessage(BlueOreReplacer.prefix + "§c未知礦物特徵: §e" + args[1]);
                         return true;
                     }
 
@@ -58,14 +58,14 @@ public class Commands implements CommandExecutor, TabCompleter {
                         world = player.getWorld();
                     } else {
                         world = Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0);
-                        if (world == null) { sender.sendMessage(PREFIX + "§c伺服器沒有載入世界"); return true; }
+                        if (world == null) { sender.sendMessage(BlueOreReplacer.prefix + "§c伺服器沒有載入世界"); return true; }
                         player = null;
                     }
 
                     Integer baseY = (sender instanceof Player p) ? p.getLocation().getBlockY() : 64;
                     Integer ySim = (args.length >= 3) ? parseCoord(args[2], baseY) : baseY;
                     if (ySim == null) {
-                        sender.sendMessage(PREFIX + "§c高度必須是整數");
+                        sender.sendMessage(BlueOreReplacer.prefix + "§c高度必須是整數");
                         return true;
                     }
 
@@ -82,7 +82,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     if (args.length >= 4) {
                         try { parsedBiomeMode = BiomeMode.valueOf(args[3].toUpperCase()); } catch (IllegalArgumentException ex) {}
                         if (parsedBiomeMode == null) {
-                            sender.sendMessage(PREFIX + "§c無效生態域: §e" + args[3]);
+                            sender.sendMessage(BlueOreReplacer.prefix + "§c無效生態域: §e" + args[3]);
                             return true;
                         }
                     } else {
@@ -94,12 +94,12 @@ public class Commands implements CommandExecutor, TabCompleter {
                     Runnable simulateTask = () -> {
                         Double prob = OreSimulateUtil.calculateFeatureProbability(Loc, featureName, biomeMode);
                         if (prob == null) {
-                            sender.sendMessage(PREFIX + "§7該生態域下此礦物特徵無生成機率: §cN/A");
+                            sender.sendMessage(BlueOreReplacer.prefix + "§7該生態域下此礦物特徵無生成機率: §cN/A");
                             return;
                         }
                         double pctEff = Math.max(0, prob) * 100.0;
                         Integer veinSize = OreSimulateUtil.getFeatureVeinSize(featureName, Loc, biomeMode);
-                        sender.sendMessage(PREFIX + "§b模擬結果 §7| §e特徵: §6" + featureName
+                        sender.sendMessage(BlueOreReplacer.prefix + "§b模擬結果 §7| §e特徵: §6" + featureName
                                 + " §7| §3世界: §b" + world.getName()
                                 + " §7| §d生態域: §5" + biomeMode.name().toLowerCase()
                                 + " §7| §9Y: §a" + ySim
@@ -114,27 +114,30 @@ public class Commands implements CommandExecutor, TabCompleter {
                     return true;
                 case "reload":
                     if (!sender.hasPermission("blueoreplacer.reload")) {
-                        sender.sendMessage(PREFIX + "§c你沒有權限使用此指令!");
+                        sender.sendMessage(BlueOreReplacer.prefix + "§c你沒有權限使用此指令!");
                         return true;
                     }
                     plugin.reloadConfig();
                     plugin.getLanguageManager().reload();
-                    sender.sendMessage(PREFIX + "§aConfig已重新加載");
+                    OreReplaceUtil.reload();
+                    plugin.setDebugMode(plugin.getConfig().getBoolean("Debug", false));
+                    plugin.setPrefix(plugin.getLanguageManager().get("BlueOreReplacer.prefix"));
+                    sender.sendMessage(BlueOreReplacer.prefix + "§aConfig已重新加載");
                     return true;
                 case "check":
                     if (!sender.hasPermission("blueoreplacer.check")) {
-                        sender.sendMessage(PREFIX + "§c你沒有權限使用此指令!");
+                        sender.sendMessage(BlueOreReplacer.prefix + "§c你沒有權限使用此指令!");
                         return true;
                     }
 
                     if (args.length == 1) {
                         if (!(sender instanceof Player)) {
-                            sender.sendMessage(PREFIX + "§c主控台需提供座標及世界");
+                            sender.sendMessage(BlueOreReplacer.prefix + "§c主控台需提供座標及世界");
                             return true;
                         }
                         player = (Player) sender;
                         boolean on = plugin.toggleCheckMode(player.getUniqueId());
-                        sender.sendMessage(PREFIX + "§b檢查模式" + (on ? "§a已開啟 §7(§e右鍵檢查方塊 §6蹲下右鍵顯示區塊資料§7)" : "§c已關閉"));
+                        sender.sendMessage(BlueOreReplacer.prefix + "§b檢查模式" + (on ? "§a已開啟 §7(§e右鍵檢查方塊 §6蹲下右鍵顯示區塊資料§7)" : "§c已關閉"));
                         return true;
                     }
 
@@ -146,7 +149,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     if (args.length >= 5) {
                         world = Bukkit.getWorld(args[4]);
                         if (world == null) {
-                            sender.sendMessage(PREFIX + "§c世界不存在: " + args[4]);
+                            sender.sendMessage(BlueOreReplacer.prefix + "§c世界不存在: " + args[4]);
                             return true;
                         }
                     } else {
@@ -161,14 +164,14 @@ public class Commands implements CommandExecutor, TabCompleter {
                     Integer y = parseCoord(args[2], refPlayer != null ? refPlayer.getLocation().getBlockY() : null);
                     Integer z = parseCoord(args[3], refPlayer != null ? refPlayer.getLocation().getBlockZ() : null);
                     if (x == null || y == null || z == null) {
-                        sender.sendMessage(PREFIX + "§c座標必須是整數");
+                        sender.sendMessage(BlueOreReplacer.prefix + "§c座標必須是整數");
                         return true;
                     }
                     int fx = x, fy = y, fz = z;
                     Runnable checkTask = () -> {
                         Block target = world.getBlockAt(fx, fy, fz);
                         boolean modified = plugin.getChunkTracker().isModified(target);
-                        sender.sendMessage(PREFIX + "§e世界: §e" + world.getName() + " §9座標: §c" + fx + " §a" + fy + " §b" + fz + " §7狀態: " + (modified ? "§6人工方塊" : "§2自然方塊"));
+                        sender.sendMessage(BlueOreReplacer.prefix + "§e世界: §e" + world.getName() + " §9座標: §c" + fx + " §a" + fy + " §b" + fz + " §7狀態: " + (modified ? "§6人工方塊" : "§2自然方塊"));
                     };
                     if (refPlayer != null) {
                         TaskScheduler.runTask(refPlayer, plugin, checkTask);
@@ -178,7 +181,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     return true;
                 case "clear":
                     if (!sender.hasPermission("blueoreplacer.debug")) {
-                        sender.sendMessage(PREFIX + "§c你沒有權限使用此指令!");
+                        sender.sendMessage(BlueOreReplacer.prefix + "§c你沒有權限使用此指令!");
                         return true;
                     }
                     if (args.length == 1) {
@@ -188,7 +191,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                         }
                         var ch = p.getLocation().getChunk();
                         plugin.getChunkTracker().clear(ch);
-                        sender.sendMessage(PREFIX + "§a已清除當前區塊 PDC:" + ch.getX() + "," + ch.getZ());
+                        sender.sendMessage(BlueOreReplacer.prefix + "§a已清除當前區塊 PDC:" + ch.getX() + "," + ch.getZ());
                         return true;
                     }
                     if (args.length >= 4) {
@@ -197,16 +200,16 @@ public class Commands implements CommandExecutor, TabCompleter {
                         Integer qy = parseCoord(args[2], player != null ? player.getLocation().getBlockY() : null);
                         Integer qz = parseCoord(args[3], player != null ? player.getLocation().getBlockZ() : null);
                         if (qx == null || qy == null || qz == null) {
-                            sender.sendMessage(PREFIX + "§c座標必須是整數 或使用 ~（僅玩家可用）");
+                            sender.sendMessage(BlueOreReplacer.prefix + "§c座標必須是整數 或使用 ~（僅玩家可用）");
                             return true;
                         }
                         if (args.length >= 5) {
                             world = Bukkit.getWorld(args[4]);
-                            if (world == null) { sender.sendMessage(PREFIX + "§c世界不存在: " + args[4]); return true; }
+                            if (world == null) { sender.sendMessage(BlueOreReplacer.prefix + "§c世界不存在: " + args[4]); return true; }
                         } else if (player != null) {
                             world = player.getWorld();
                         } else {
-                            sender.sendMessage(PREFIX + "§c主控台需提供世界名稱");
+                            sender.sendMessage(BlueOreReplacer.prefix + "§c主控台需提供世界名稱");
                             return true;
                         }
                         int cx = qx >> 4;
@@ -214,7 +217,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                         Runnable clearTask = () -> {
                             var ch = world.getChunkAt(cx, cz);
                             plugin.getChunkTracker().clear(ch);
-                            sender.sendMessage(PREFIX + "§a已清除區塊 PDC：" + ch.getX() + "," + ch.getZ() + " @ " + world.getName());
+                            sender.sendMessage(BlueOreReplacer.prefix + "§a已清除區塊 PDC：" + ch.getX() + "," + ch.getZ() + " @ " + world.getName());
                         };
                         if (player != null) {
                             TaskScheduler.runTask(player, plugin, clearTask);
@@ -227,24 +230,24 @@ public class Commands implements CommandExecutor, TabCompleter {
                     return true;
                 case "debug":
                     if (!sender.hasPermission("blueoreplacer.debug")) {
-                        sender.sendMessage(PREFIX + "§c你沒有權限使用此指令!");
+                        sender.sendMessage(BlueOreReplacer.prefix + "§c你沒有權限使用此指令!");
                         return true;
                     }
                     if (sender instanceof Player) {
                         player = (Player) sender;
                         boolean stat = plugin.toggleDebugMode(player.getUniqueId());
-                        sender.sendMessage(PREFIX + "§6Debug模式" + (stat ? "§a已開啟" : "§c已關閉"));
+                        sender.sendMessage(BlueOreReplacer.prefix + "§6Debug模式" + (stat ? "§a已開啟" : "§c已關閉"));
                     } else {
                         boolean stat = plugin.toggleDebugMode(new UUID(0L, 0L));
-                        sender.sendMessage(PREFIX + "§6Debug模式" + (stat ? "§a已開啟" : "§c已關閉"));
+                        sender.sendMessage(BlueOreReplacer.prefix + "§6Debug模式" + (stat ? "§a已開啟" : "§c已關閉"));
                     }
                     return true;
                 default:
-                    sender.sendMessage(PREFIX + "§c用法錯誤 | /blueoreplacer reload|debug|check|clear");
+                    sender.sendMessage(BlueOreReplacer.prefix + "§c用法錯誤 | /blueoreplacer reload|debug|check|clear");
                     return true;
             }
         }
-        sender.sendMessage(PREFIX + "§c用法錯誤 | /blueoreplacer reload|debug|check|clear");
+        sender.sendMessage(BlueOreReplacer.prefix + "§c用法錯誤 | /blueoreplacer reload|debug|check|clear");
         return true;
     }
 

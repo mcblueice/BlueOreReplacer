@@ -16,7 +16,6 @@ import net.mcblueice.blueorereplacer.utils.TaskScheduler;
 
 public class CheckModeListener implements Listener {
     private final BlueOreReplacer plugin;
-    private static final String PREFIX = "§7§l[§b§l礦物§7§l]§r";
 
     public CheckModeListener(BlueOreReplacer plugin) {
         this.plugin = plugin;
@@ -27,7 +26,7 @@ public class CheckModeListener implements Listener {
         if (event.getHand() != EquipmentSlot.HAND) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         Player player = event.getPlayer();
-        if (!plugin.checkModePlayers.contains(player.getUniqueId())) return;
+        if (!BlueOreReplacer.checkModePlayers.contains(player.getUniqueId())) return;
 
         Block block = event.getClickedBlock();
         if (block == null) return;
@@ -56,7 +55,7 @@ public class CheckModeListener implements Listener {
             });
         } else {
             boolean modified = tracker.isModified(block);
-            TaskScheduler.runTask(player, plugin, () -> player.sendMessage(PREFIX + "§e世界: §e" + block.getWorld().getName() + " §9座標 §c" + block.getX() + " §a" + block.getY() + " §b" + block.getZ() + " §7狀態: " + (modified ? "§6人工方塊" : "§2自然方塊")));
+            TaskScheduler.runTask(player, plugin, () -> player.sendMessage(BlueOreReplacer.prefix + "§e世界: §e" + block.getWorld().getName() + " §9座標 §c" + block.getX() + " §a" + block.getY() + " §b" + block.getZ() + " §7狀態: " + (modified ? "§6人工方塊" : "§2自然方塊")));
         }
     }
 }

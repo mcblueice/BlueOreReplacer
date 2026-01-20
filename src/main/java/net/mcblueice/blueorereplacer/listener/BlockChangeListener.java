@@ -39,7 +39,7 @@ public class BlockChangeListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
         Location loc = block.getLocation();
-        plugin.sendDebug(String.format(
+        if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
             "玩家破壞: §e%s §7by §6%s §7@ §9%s §c%d §a%d §b%d",
             block.getType().name(),
             event.getPlayer().getName(),
@@ -56,7 +56,7 @@ public class BlockChangeListener implements Listener {
         Block block = event.getBlock();
         Location loc = block.getLocation();
         Entity entity = event.getEntity();
-        plugin.sendDebug(String.format(
+        if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
             "實體變更: §e%s §e7-> §e%s §7by §6%s §7@ §9%s §c%d §a%d §b%d",
             block.getType().name(),
             (event.getTo() != null ? event.getTo().name() : "(no-change)"),
@@ -84,7 +84,7 @@ public class BlockChangeListener implements Listener {
         List<Block> explodedBlocks = event.blockList();
         Set<Long> explodedBlockSet = new HashSet<>(explodedBlocks.size() * 2);
 
-        plugin.sendDebug(String.format(
+        if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
             "實體爆炸: §6%s §7@ §9%s §c%d §a%d §b%d §7影響數: §e%d",
             (entity != null ? entity.getType().name() : "unknown"),
             (loc != null ? loc.getWorld().getName() : "unknown"),
@@ -131,7 +131,7 @@ public class BlockChangeListener implements Listener {
     public void onBlockExplode(BlockExplodeEvent event) {
         for (Block block : event.blockList()) {
             Location loc = block.getLocation();
-            plugin.sendDebug(String.format(
+            if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
                 "方塊爆炸: §e%s §7@ §9%s §c%d §a%d §b%d §7影響數: §e%d",
                 block.getType().name(),
                 (loc != null ? loc.getWorld().getName() : "unknown"),
@@ -148,7 +148,7 @@ public class BlockChangeListener implements Listener {
     public void onPistonExtend(BlockPistonExtendEvent event) {
         event.getBlocks().forEach(block -> {
             Location loc = block.getLocation();
-            plugin.sendDebug(String.format(
+            if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
                 "活塞推出: §e%s §7@ §9%s §c%d §a%d §b%d §7影響數: §e%d",
                 block.getType().name(),
                 (loc != null ? loc.getWorld().getName() : "unknown"),
@@ -165,7 +165,7 @@ public class BlockChangeListener implements Listener {
     public void onPistonRetract(BlockPistonRetractEvent event) {
         event.getBlocks().forEach(block -> {
             Location loc = block.getLocation();
-            plugin.sendDebug(String.format(
+            if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
                 "活塞拉回: §e%s §7@ §9%s §c%d §a%d §b%d §7影響數: §e%d",
                 block.getType().name(),
                 (loc != null ? loc.getWorld().getName() : "unknown"),

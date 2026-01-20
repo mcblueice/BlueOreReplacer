@@ -9,9 +9,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import net.mcblueice.blueorereplacer.utils.TaskScheduler;
-
 import net.mcblueice.blueorereplacer.utils.ConfigManager;
+import net.mcblueice.blueorereplacer.utils.OreReplaceUtil;
 import net.mcblueice.blueorereplacer.utils.ChunkModificationTracker;
 import net.mcblueice.blueorereplacer.listener.BlockChangeListener;
 import net.mcblueice.blueorereplacer.listener.CheckModeListener;
@@ -19,11 +18,14 @@ import net.mcblueice.blueorereplacer.listener.ChunkListener;
 
 public final class BlueOreReplacer extends JavaPlugin {
     private static BlueOreReplacer instance;
-    private ConfigManager languageManager;
+    private ConfigManager lang;
     private Logger logger;
     private ChunkModificationTracker chunkTracker;
-    public final Set<UUID> checkModePlayers = ConcurrentHashMap.newKeySet();
-    public final Set<UUID> debugModePlayers = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> checkModePlayers = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> debugModePlayers = ConcurrentHashMap.newKeySet();
+    private static final UUID CONSOLE_UUID = new UUID(0L, 0L);
+    public static String prefix = "§7§l[§b§l礦物§7§l]";
+    public static boolean debug = false;
 
 	@Override
 	public void onEnable() {
@@ -37,12 +39,16 @@ public final class BlueOreReplacer extends JavaPlugin {
         }
 
         saveDefaultConfig();
-        languageManager = new ConfigManager(this);
+        lang = new ConfigManager(this);
         chunkTracker = new ChunkModificationTracker(this);
 
 		Commands commands = new Commands(this);
         getCommand("blueoreplacer").setExecutor(commands);
         getCommand("blueoreplacer").setTabCompleter(commands);
+
+        OreReplaceUtil.reload();
+        debug = getConfig().getBoolean("Debug", false);
+        prefix = lang.get("Prefix");
 
         getServer().getPluginManager().registerEvents(new BlockChangeListener(this), this);
         getServer().getPluginManager().registerEvents(new CheckModeListener(this), this);
@@ -63,7 +69,7 @@ public final class BlueOreReplacer extends JavaPlugin {
 	}
 
     public static BlueOreReplacer getInstance() { return instance; }
-    public ConfigManager getLanguageManager() { return languageManager; }
+    public ConfigManager getLanguageManager() { return lang; }
     public ChunkModificationTracker getChunkTracker() { return chunkTracker; }
 
     public boolean toggleCheckMode(UUID uuid) {
@@ -75,6 +81,20 @@ public final class BlueOreReplacer extends JavaPlugin {
             checkModePlayers.add(uuid);
             return true;
         }
+    }
+
+    public void setDebugMode(boolean enabled) {
+        debug = enabled;
+    }
+    public boolean getDebugMode() {
+        return debug;
+    }
+
+    public void setPrefix(String newPrefix) {
+        prefix = newPrefix;
+    }
+    public String getPrefix() {
+        return prefix;
     }
 
     public boolean isInCheckMode(UUID uuid) {
@@ -93,19 +113,34 @@ public final class BlueOreReplacer extends JavaPlugin {
         }
     }
 
-    public void sendDebug(String message) {
+    public static void sendDebug(String message) {
         if (message == null) return;
         if (debugModePlayers.isEmpty()) return;
 
         // console
-        if (debugModePlayers.contains(new UUID(0L, 0L))) {
-            TaskScheduler.runTask(this, () -> Bukkit.getConsoleSender().sendMessage("§7§l[§b§l礦物§7§l]§eDEBUG: §7" + message));
-        }
+        if (debugModePlayers.contains(CONSOLE_UUID)) Bukkit.getConsoleSender().sendMessage(prefix + "§eDEBUG: §7" + message);
         // player
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!debugModePlayers.contains(player.getUniqueId())) continue;
-            player.sendMessage("§7§l[§b§l礦物§7§l]§eDEBUG: §7" + message);
+        for (UUID uuid : debugModePlayers) {
+            if (uuid.equals(CONSOLE_UUID)) continue;
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null && player.isOnline()) player.sendMessage(prefix + "§eDEBUG: §7" + message);
         }
+    }
+
+    public static void sendMessage(String message) {
+        sendMessage(prefix, message);
+    }
+    public static void sendMessage(String prefix, String message) {
+        if (message == null) return;
+        Bukkit.getConsoleSender().sendMessage(prefix + message);
+    }
+
+    public static void sendMessage(Player player, String message) {
+        sendMessage(player, prefix, message);
+    }
+    public static void sendMessage(Player player, String prefix, String message) {
+        if (player == null || message == null) return;
+        player.sendMessage(prefix + message);
     }
 
     // Paper
