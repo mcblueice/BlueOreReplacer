@@ -90,7 +90,7 @@ public class OreSimulateUtil {
             if (chance <= 0) return 0.0;
 
             double py = weights[y - dYMin] / activeWeightSum;
-            double baseProbability = count * multiplier * py * (k * veinSize / hSpread) / 256.0;
+            double baseProbability = count * multiplier * py * (k / hSpread) / 256.0;
             return baseProbability * chance;
         }
     }
@@ -113,19 +113,19 @@ public class OreSimulateUtil {
         // 鐵礦: 主分佈(三角) + 高海拔(三角) + 平均分佈(平均)
         features.add(new OreFeature("iron_main", OreType.IRON_ORE, 9, 10, -24, 56, -24, 56, "tri", 0.9, 3, "generic", 1.0));
         features.add(new OreFeature("iron_high", OreType.IRON_ORE, 9, 90, 80, 256, 80, 384, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("iron_alt", OreType.IRON_ORE, 9, 10, -64, 72, -64, 72, "uniform", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("iron_alt", OreType.IRON_ORE, 4, 10, -64, 72, -64, 72, "uniform", 0.9, 3, "generic", 1.0));
 
         // 銅礦: 主分佈(三角)
         features.add(new OreFeature("copper_main", OreType.COPPER_ORE, 10, 16, -16, 112, -16, 112, "tri", 0.9, 3, "generic", 1.0));
 
         // 金礦: 主分佈(三角) + 惡地附加(平均)
         features.add(new OreFeature("gold_main", OreType.GOLD_ORE, 9, 4, -64, 32, -64, 32, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("gold_alt", OreType.GOLD_ORE, 9, 2, -64, -48, -64, -48, "uniform", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("gold_alt", OreType.GOLD_ORE, 9, 0.5, -64, -48, -64, -48, "uniform", 0.9, 3, "generic", 1.0));
         features.add(new OreFeature("gold_badlands_extra", OreType.GOLD_ORE, 9, 50, 32, 256, 32, 256, "uniform", 0.9, 3, "badlands", 1.0));
 
         // 青金石: 主分佈(三角) + 平均分佈(平均)
-        features.add(new OreFeature("lapis_main", OreType.LAPIS_ORE, 6, 2, -32, 32, -32, 32, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("lapis_alt", OreType.LAPIS_ORE, 6, 4, -64, 64, -64, 64, "uniform", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("lapis_main", OreType.LAPIS_ORE, 7, 2, -32, 32, -32, 32, "tri", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("lapis_alt", OreType.LAPIS_ORE, 7, 4, -64, 64, -64, 64, "uniform", 0.9, 3, "generic", 1.0));
 
         // 紅石: 主分佈(三角) + 平均分佈(平均)
         features.add(new OreFeature("redstone_main", OreType.REDSTONE_ORE, 8, 8, -64, -32, -96, -32, "tri", 0.9, 3, "generic", 1.0));
@@ -137,7 +137,7 @@ public class OreSimulateUtil {
         // 鑽石: 主分佈(三角) + 掩埋分佈(三角) + 大礦分佈(三角) + 中礦分佈(均勻)
         features.add(new OreFeature("diamond_main", OreType.DIAMOND_ORE, 4, 7, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 0.5));
         features.add(new OreFeature("diamond_buried", OreType.DIAMOND_ORE, 8, 4, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("diamond_large", OreType.DIAMOND_ORE, 12, 9, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 1.0 / 9.0 * 0.3));
+        features.add(new OreFeature("diamond_large", OreType.DIAMOND_ORE, 12, 0.11, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 0.3));
         features.add(new OreFeature("diamond_medium", OreType.DIAMOND_ORE, 8, 2, -64, -4, -64, -4, "uniform", 0.9, 3, "generic", 0.5));
 
         // 石英礦: 主分佈(平均)

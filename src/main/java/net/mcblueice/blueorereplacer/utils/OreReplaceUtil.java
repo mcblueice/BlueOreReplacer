@@ -68,6 +68,10 @@ public class OreReplaceUtil {
 				if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("§c跳過非地: " + GenericUtil.FaceToChinese(face) + " " + block.getType().name());
 				continue;
 			}
+			if (tracker.isExposed(block)) {
+				if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("§c跳過暴露: " + GenericUtil.FaceToChinese(face) + " " + block.getType().name());
+				continue;
+			}
 			if (tracker.isModified(block)) {
 				if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("§c跳過人工: " + GenericUtil.FaceToChinese(face) + " " + block.getType().name());
 				continue;
@@ -106,6 +110,10 @@ public class OreReplaceUtil {
 			if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §4自身人工方塊 無法生成");
 			return;
 		}
+		if (tracker.isExposed(target)) {
+			if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §4自身暴露方塊 無法生成");
+			return;
+		}
 		if (!isUnderground(target.getType())) {
 			if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §4自身非地方塊 無法生成");
 			return;
@@ -128,6 +136,8 @@ public class OreReplaceUtil {
 				}
 			}
 		}
+
+		tracker.markExposed(target);
 
 		Location loc = target.getLocation();
 		OreSelection selection = OreSimulateUtil.getMostLikelyOre(target);
@@ -301,6 +311,7 @@ public class OreReplaceUtil {
         if (originKey != Long.MIN_VALUE && pack(x, y, z) == originKey) return false;
         if (forbiddenSurfaces.contains(mat)) return false;
         if (!isUnderground(mat)) return false;
+		if (tracker.isExposed(b)) return false;
         if (tracker.isModified(b)) return false;
 
         for (BlockFace face : FACES) {

@@ -26,12 +26,14 @@ import net.mcblueice.blueorereplacer.BlueOreReplacer;
 
 public class ChunkModificationTracker {
 
-    private static final String KEY_BITS = "modified_bits"; // byte[]
-    private static final String KEY_BASE_Y = "modified_baseY"; // int
-    private static final String KEY_HEIGHT = "modified_height"; // int
+    private static final String KEY_BITS = "modified_bits"; // bit[]
+    private static final String KEY_EXPOSED_BITS = "exposed_bits"; // bit[]
+    private static final String KEY_BASE_Y = "modified_baseY"; // int ymin
+    private static final String KEY_HEIGHT = "modified_height"; // int ymax
     private static final long CACHE_TTL_MILLIS = TimeUnit.MINUTES.toMillis(1);
 
     private final NamespacedKey bitsKey;
+    private final NamespacedKey exposedBitsKey;
     private final NamespacedKey baseYKey;
     private final NamespacedKey heightKey;
     private final Logger logger;
@@ -44,6 +46,7 @@ public class ChunkModificationTracker {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.bitsKey = new NamespacedKey(plugin, KEY_BITS);
+        this.exposedBitsKey = new NamespacedKey(plugin, KEY_EXPOSED_BITS);
         this.baseYKey = new NamespacedKey(plugin, KEY_BASE_Y);
         this.heightKey = new NamespacedKey(plugin, KEY_HEIGHT);
         this.foliaEnvironment = detectFoliaEnvironment();
@@ -70,12 +73,34 @@ public class ChunkModificationTracker {
         }
     }
 
+    public void markExposed(Block block) {
+        if (block == null) return;
+        Chunk chunk = block.getChunk();
+        Context ctx = loadContext(chunk);
+        ensureWindowForY(ctx, block.getY());
+        int index = toIndex(block.getX() & 0xF, block.getZ() & 0xF, block.getY(), ctx.baseY, ctx.height);
+        if (index < 0) return;
+        if (!ctx.exposedBitSet.get(index)) {
+            ctx.exposedBitSet.set(index);
+            ctx.markDirty();
+        }
+    }
+
     public boolean isModified(Block block) {
         Chunk chunk = block.getChunk();
         Context ctx = loadContext(chunk);
         if (ctx.height <= 0) return false;
         int index = toIndex(block.getX() & 0xF, block.getZ() & 0xF, block.getY(), ctx.baseY, ctx.height);
         return index >= 0 && ctx.bitSet.get(index);
+    }
+
+    public boolean isExposed(Block block) {
+        if (block == null) return false;
+        Chunk chunk = block.getChunk();
+        Context ctx = loadContext(chunk);
+        if (ctx.height <= 0) return false;
+        int index = toIndex(block.getX() & 0xF, block.getZ() & 0xF, block.getY(), ctx.baseY, ctx.height);
+        return index >= 0 && ctx.exposedBitSet.get(index);
     }
 
     private int toIndex(int x, int z, int y, int baseY, int height) {
@@ -86,6 +111,7 @@ public class ChunkModificationTracker {
 
     private static class Context {
         BitSet bitSet;
+        BitSet exposedBitSet;
         int baseY;
         int height;
         int worldMin;
@@ -158,12 +184,15 @@ public class ChunkModificationTracker {
         Integer storedBaseY = pdc.get(baseYKey, PersistentDataType.INTEGER);
         Integer storedHeight = pdc.get(heightKey, PersistentDataType.INTEGER);
         byte[] raw = pdc.get(bitsKey, PersistentDataType.BYTE_ARRAY);
+        byte[] rawExposed = pdc.get(exposedBitsKey, PersistentDataType.BYTE_ARRAY);
 
         Context ctx = new Context();
         ctx.setWorldBounds(worldMin, worldMax);
 
-        if (raw != null && storedBaseY != null && storedHeight != null) {
+        boolean hasAnyBits = raw != null || rawExposed != null;
+        if (hasAnyBits && storedBaseY != null && storedHeight != null) {
             BitSet storedBits = BitSet.valueOf(raw);
+            BitSet storedExposedBits = (rawExposed == null) ? new BitSet() : BitSet.valueOf(rawExposed);
             int storedTopExclusive = storedBaseY + storedHeight;
 
             int overlapBase = Math.max(storedBaseY, worldMin);
@@ -174,6 +203,7 @@ public class ChunkModificationTracker {
                 ctx.baseY = overlapBase;
                 ctx.height = overlapHeight;
                 ctx.bitSet = new BitSet(overlapHeight * 16 * 16);
+                ctx.exposedBitSet = new BitSet(overlapHeight * 16 * 16);
 
                 int baseShiftLayers = overlapBase - storedBaseY;
                 for (int bit = storedBits.nextSetBit(0); bit >= 0; bit = storedBits.nextSetBit(bit + 1)) {
@@ -184,6 +214,17 @@ public class ChunkModificationTracker {
                         int newRelLayer = relLayer - baseShiftLayers;
                         int newIndex = newRelLayer * 256 + inLayer;
                         ctx.bitSet.set(newIndex);
+                    }
+                }
+
+                for (int bit = storedExposedBits.nextSetBit(0); bit >= 0; bit = storedExposedBits.nextSetBit(bit + 1)) {
+                    int relLayer = bit / 256;
+                    int inLayer = bit % 256;
+                    int worldY = storedBaseY + relLayer;
+                    if (worldY >= overlapBase && worldY < overlapTop) {
+                        int newRelLayer = relLayer - baseShiftLayers;
+                        int newIndex = newRelLayer * 256 + inLayer;
+                        ctx.exposedBitSet.set(newIndex);
                     }
                 }
 
@@ -199,6 +240,7 @@ public class ChunkModificationTracker {
                 ctx.baseY = worldMin;
                 ctx.height = 0;
                 ctx.bitSet = new BitSet();
+                ctx.exposedBitSet = new BitSet();
                 ctx.markDirty();
                 logger.fine(() -> String.format(
                     "[ChunkModificationTracker] No overlap with world height; cleared window for chunk (%d,%d)",
@@ -209,6 +251,7 @@ public class ChunkModificationTracker {
             ctx.baseY = worldMin;
             ctx.height = 0;
             ctx.bitSet = new BitSet();
+            ctx.exposedBitSet = new BitSet();
             logger.finer(() -> String.format(
                 "[ChunkModificationTracker] Initialized empty window for chunk (%d,%d) baseY=%d",
                 chunk.getX(), chunk.getZ(), ctx.baseY
@@ -230,6 +273,7 @@ public class ChunkModificationTracker {
             pdc.set(baseYKey, PersistentDataType.INTEGER, ctx.baseY);
             pdc.set(heightKey, PersistentDataType.INTEGER, ctx.height);
             pdc.set(bitsKey, PersistentDataType.BYTE_ARRAY, ctx.bitSet.toByteArray());
+            pdc.set(exposedBitsKey, PersistentDataType.BYTE_ARRAY, ctx.exposedBitSet.toByteArray());
             ctx.clearDirty();
         } finally {
             ctx.clearFlushPending();
@@ -256,6 +300,7 @@ public class ChunkModificationTracker {
     public void clear(Chunk chunk) {
         PersistentDataContainer pdc = chunk.getPersistentDataContainer();
         pdc.remove(bitsKey);
+        pdc.remove(exposedBitsKey);
         pdc.remove(baseYKey);
         pdc.remove(heightKey);
         cache.remove(ChunkKey.of(chunk));
@@ -328,10 +373,14 @@ public class ChunkModificationTracker {
         if (ctx.bitSet == null) {
             ctx.bitSet = new BitSet();
         }
+        if (ctx.exposedBitSet == null) {
+            ctx.exposedBitSet = new BitSet();
+        }
         if (ctx.height <= 0) {
             ctx.baseY = y;
             ctx.height = 1;
             ctx.bitSet = new BitSet(256);
+            ctx.exposedBitSet = new BitSet(256);
             ctx.markDirty();
             return;
         }
@@ -343,6 +392,7 @@ public class ChunkModificationTracker {
             int deltaLayers = ctx.baseY - y;
             int newHeight = ctx.height + deltaLayers;
             BitSet newBits = new BitSet(newHeight * 256);
+            BitSet newExposedBits = new BitSet(newHeight * 256);
 
             for (int bit = ctx.bitSet.nextSetBit(0); bit >= 0; bit = ctx.bitSet.nextSetBit(bit + 1)) {
                 int relLayer = bit / 256;
@@ -352,9 +402,18 @@ public class ChunkModificationTracker {
                 newBits.set(newIndex);
             }
 
+            for (int bit = ctx.exposedBitSet.nextSetBit(0); bit >= 0; bit = ctx.exposedBitSet.nextSetBit(bit + 1)) {
+                int relLayer = bit / 256;
+                int inLayer = bit % 256;
+                int newRelLayer = relLayer + deltaLayers;
+                int newIndex = newRelLayer * 256 + inLayer;
+                newExposedBits.set(newIndex);
+            }
+
             ctx.baseY = y;
             ctx.height = newHeight;
             ctx.bitSet = newBits;
+            ctx.exposedBitSet = newExposedBits;
             ctx.markDirty();
             logger.fine(() -> String.format(
                 "[ChunkModificationTracker] Expanded window downward to baseY=%d height=%d", ctx.baseY, ctx.height

@@ -121,7 +121,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     plugin.getLanguageManager().reload();
                     OreReplaceUtil.reload();
                     plugin.setDebugMode(plugin.getConfig().getBoolean("Debug", false));
-                    plugin.setPrefix(plugin.getLanguageManager().get("BlueOreReplacer.prefix"));
+                    plugin.setPrefix(plugin.getLanguageManager().get("Prefix"));
                     sender.sendMessage(BlueOreReplacer.prefix + "§aConfig已重新加載");
                     return true;
                 case "check":

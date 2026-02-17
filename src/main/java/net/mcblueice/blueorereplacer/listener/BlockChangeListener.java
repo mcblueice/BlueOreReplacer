@@ -129,18 +129,48 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent event) {
-        for (Block block : event.blockList()) {
-            Location loc = block.getLocation();
-            if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
+        Block sourceBlock = event.getBlock();
+        Location loc = sourceBlock.getLocation();
+
+        List<Block> explodedBlocks = event.blockList();
+        Set<Long> explodedBlockSet = new HashSet<>(explodedBlocks.size() * 2);
+
+        if (BlueOreReplacer.debug) {
+            BlueOreReplacer.sendDebug(String.format(
                 "方塊爆炸: §e%s §7@ §9%s §c%d §a%d §b%d §7影響數: §e%d",
-                block.getType().name(),
+                sourceBlock.getType().name(),
                 (loc != null ? loc.getWorld().getName() : "unknown"),
                 (loc != null ? loc.getBlockX() : 0),
                 (loc != null ? loc.getBlockY() : 0),
                 (loc != null ? loc.getBlockZ() : 0),
-                event.blockList().size()
+                explodedBlocks.size()
             ));
-            OreReplaceUtil.tryReplaceNeighbors(block);
+        }
+
+        for (Block block : explodedBlocks) {
+            explodedBlockSet.add(encode(block.getX(), block.getY(), block.getZ()));
+            OreReplaceUtil.tryReplace(block, null, false);
+        }
+
+        Set<Block> outerEdge = new HashSet<>();
+        int[][] dirs = {{1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1}};
+
+        for (Block block : explodedBlocks) {
+            int x = block.getX(), y = block.getY(), z = block.getZ();
+            for (int[] d : dirs) {
+                int nx = x + d[0], ny = y + d[1], nz = z + d[2];
+                long key = encode(nx, ny, nz);
+                if (!explodedBlockSet.contains(key)) {
+                    Block neighbor = block.getWorld().getBlockAt(nx, ny, nz);
+                    if (!neighbor.getType().isAir()) {
+                        outerEdge.add(neighbor);
+                    }
+                }
+            }
+        }
+
+        for (Block block : outerEdge) {
+            OreReplaceUtil.tryReplace(block, null, true);
         }
     }
 
