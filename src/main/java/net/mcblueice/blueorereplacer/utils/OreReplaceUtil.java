@@ -1,11 +1,9 @@
 package net.mcblueice.blueorereplacer.utils;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -123,7 +121,7 @@ public class OreReplaceUtil {
 				Block block = target.getRelative(face);
 				if (block.equals(exclude)) continue;
 				if (forbiddenSurfaces.contains(block.getType())) {
-					if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §4周圍暴露方塊 無法生成");
+					if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §4周圍空氣方塊 無法生成");
 					return;
 				}
 				if (tracker.isModified(block)) {
@@ -167,175 +165,17 @@ public class OreReplaceUtil {
 	}
 
 	public static void tryReplaceVein(Block target, Block originBlock, int veinSize) {
-		Material startMat = target.getType();
-		if (!isOre(startMat)) return;
-		if (veinSize <= 0) return;
-
-		int size = veinSize;
-		int maxExtraBlocks = Math.max(0, veinSize - 1);
-
-		ThreadLocalRandom rnd = ThreadLocalRandom.current();
-		World world = target.getWorld();
-		int baseX = target.getX();
-		int baseY = target.getY();
-		int baseZ = target.getZ();
-
-		boolean restrictAngle = false;
-		double avoidAngle = 0.0D;
-		final double exclusionHalfAngle = Math.toRadians(60.0D);
-		if (originBlock != null) {
-			double vecX = originBlock.getX() - baseX;
-			double vecZ = originBlock.getZ() - baseZ;
-			double lenSq = vecX * vecX + vecZ * vecZ;
-			if (lenSq > 1.0E-6) {
-				restrictAngle = true;
-				avoidAngle = Math.atan2(vecX, vecZ);
-				if (!Double.isFinite(avoidAngle)) restrictAngle = false;
-			}
-		}
-
-		double dirX = 0, dirZ = 0;
-		double startY = baseY + rnd.nextInt(3) - 1;
-		double endY = baseY + rnd.nextInt(3) - 1;
-
-		boolean foundGoodDirection = false;
-		int checkDist = Math.max(3, size / 4);
-
-		for (int attempt = 0; attempt < 5; attempt++) {
-			double angle = AngleExcluding(rnd, restrictAngle, avoidAngle, exclusionHalfAngle);
-			dirX = Math.sin(angle);
-			dirZ = Math.cos(angle);
-			if (isDirectionSafe(world, baseX, baseY, baseZ, dirX, dirZ, checkDist, originBlock)) { foundGoodDirection = true; break; }
-		}
-
-		if (!foundGoodDirection) if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §6無法找到合適方向生成 使用最後方向生成礦脈");
-
-		Set<Long> processedKeys = new HashSet<>();
-		processedKeys.add(pack(baseX, baseY, baseZ));
-
-		int replaced = 0;
-
-		double spread = size / 8.0D;
-		double startX = baseX + dirX * spread;
-		double endX = baseX - dirX * spread;
-		double startZ = baseZ + dirZ * spread;
-		double endZ = baseZ - dirZ * spread;
-
-		long originKey = (originBlock != null) ? pack(originBlock.getX(), originBlock.getY(), originBlock.getZ()) : Long.MIN_VALUE;
-
-		for (int i = 0; i < size && replaced < maxExtraBlocks; i++) {
-			double t = (double) i / (double) size;
-			double cx = startX + (endX - startX) * t;
-			double cy = startY + (endY - startY) * t;
-			double cz = startZ + (endZ - startZ) * t;
-
-			double randomRadius = rnd.nextDouble() * size / 16.0;
-			double radius = ((Math.sin(Math.PI * t) + 1.0) * randomRadius + 1.0) / 2.0;
-			if (radius <= 0.0) {
-				if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §8礦脈步驟 " + i + " 半徑<=0.0 (radius=" + radius + ") 跳過");
-				continue;
-			}
-
-			int minX = (int) Math.floor(cx - radius);
-			int maxX = (int) Math.floor(cx + radius);
-			int minY = (int) Math.floor(cy - radius);
-			int maxY = (int) Math.floor(cy + radius);
-			int minZ = (int) Math.floor(cz - radius);
-			int maxZ = (int) Math.floor(cz + radius);
-
-			double rSq = radius * radius;
-
-			for (int x = minX; x <= maxX && replaced < maxExtraBlocks; x++) {
-				for (int y = minY; y <= maxY && replaced < maxExtraBlocks; y++) {
-					for (int z = minZ; z <= maxZ && replaced < maxExtraBlocks; z++) {
-						long key = pack(x, y, z);
-						if (processedKeys.contains(key)) continue;
-
-						double dx = x + 0.5 - cx;
-						double dy = y + 0.5 - cy;
-						double dz = z + 0.5 - cz;
-						if (dx * dx + dy * dy + dz * dz >= rSq) continue;
-
-						processedKeys.add(key);
-						if (tryReplaceBlock(world, x, y, z, startMat, originKey)) {
-							replaced++;
-							if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §a礦脈[" + x + "," + y + "," + z + "] §a生成成功");
-						} else {
-							if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §a礦脈[" + x + "," + y + "," + z + "] §c生成失敗");
-						}
-					}
-				}
-			}
-		}
-
-		int totalPlaced = Math.min(veinSize, replaced + 1);
-		if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §d礦脈生長完成: size=" + totalPlaced + "/scale=" + size + "");
-	}
-
-	private static double AngleExcluding(ThreadLocalRandom rnd, boolean restrain, double avoid, double exclusionHalfAngle) {
-		double fullCircle = Math.PI * 2.0D;
-		if (!restrain) {
-			return rnd.nextDouble() * fullCircle;
-		}
-		for (int attempts = 0; attempts < 64; attempts++) {
-			double candidate = rnd.nextDouble() * fullCircle;
-			double diff = Math.atan2(Math.sin(candidate - avoid), Math.cos(candidate - avoid));
-			if (!Double.isFinite(diff) || Math.abs(diff) > exclusionHalfAngle) {
-				return candidate;
-			}
-		}
-		return rnd.nextDouble() * fullCircle;
-	}
-
-	private static boolean isDirectionSafe(World world, int bx, int by, int bz, double dx, double dz, int dist, Block origin) {
-		for (int s = 1; s <= dist; s++) {
-			int cx = (int) Math.round(bx + dx * s);
-			int cz = (int) Math.round(bz + dz * s);
-			for (int yOff = -1; yOff <= 1; yOff++) {
-				int cy = by + yOff;
-				Block b = world.getBlockAt(cx, cy, cz);
-				if (origin != null && b.equals(origin)) continue;
-				Material m = b.getType();
-				if (tracker.isModified(b) || forbiddenSurfaces.contains(m) || !isUnderground(m)) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	private static boolean tryReplaceBlock(World world, int x, int y, int z, Material targetType, long originKey) {
-        Block b = world.getBlockAt(x, y, z);
-        Material mat = b.getType();
-
-        if (originKey != Long.MIN_VALUE && pack(x, y, z) == originKey) return false;
-        if (forbiddenSurfaces.contains(mat)) return false;
-        if (!isUnderground(mat)) return false;
-		if (tracker.isExposed(b)) return false;
-        if (tracker.isModified(b)) return false;
-
-        for (BlockFace face : FACES) {
-            int nx = x + face.getModX();
-            int ny = y + face.getModY();
-            int nz = z + face.getModZ();
-
-            Block neighbor = world.getBlockAt(nx, ny, nz);
-
-            if (originKey != Long.MIN_VALUE && pack(nx, ny, nz) == originKey) continue;
-            if (neighbor.getType() == targetType) continue;
-
-            Material nMat = neighbor.getType();
-            if (forbiddenSurfaces.contains(nMat) || !isUnderground(nMat)) return false;
-            if (tracker.isModified(neighbor)) return false; 
-        }
-
-        b.setType(targetType, false);
-        tracker.markModified(b);
-        return true;
-    }
-
-	private static long pack(int x, int y, int z) {
-		return ((long) x & 0x7FFFFFFL) | (((long) z & 0x7FFFFFFL) << 27) | (((long) y & 0x3FFFL) << 54);
+		VeinGenUtil.growVein(
+				target,
+				originBlock,
+				veinSize,
+				forbiddenSurfaces,
+				FACES,
+				tracker,
+				OreReplaceUtil::isUnderground,
+				OreReplaceUtil::isOre,
+				BlueOreReplacer.debug
+		);
 	}
 
 	public static boolean hideOres(Block target) {
