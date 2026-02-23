@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
 import net.mcblueice.blueorereplacer.BlueOreReplacer;
+import net.mcblueice.blueorereplacer.tracker.BlockStateTracker;
 
 public final class VeinGenUtil {
 
@@ -71,7 +72,7 @@ public final class VeinGenUtil {
             int veinSize,
             Set<Material> forbiddenSurfaces,
             BlockFace[] faces,
-            ChunkModificationTracker tracker,
+            BlockStateTracker tracker,
             Predicate<Material> isUnderground,
             Predicate<Material> isOre,
             boolean debugEnabled
@@ -298,7 +299,7 @@ public final class VeinGenUtil {
             double dz,
             int dist,
             Block origin,
-            ChunkModificationTracker tracker,
+            BlockStateTracker tracker,
             Set<Material> forbiddenSurfaces,
             Predicate<Material> isUnderground
     ) {
@@ -327,7 +328,7 @@ public final class VeinGenUtil {
             long originKey,
             Set<Material> forbiddenSurfaces,
             BlockFace[] faces,
-            ChunkModificationTracker tracker,
+            BlockStateTracker tracker,
             Predicate<Material> isUnderground
     ) {
         Block b = world.getBlockAt(x, y, z);

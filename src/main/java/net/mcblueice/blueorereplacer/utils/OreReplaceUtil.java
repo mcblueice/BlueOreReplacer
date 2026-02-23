@@ -7,8 +7,10 @@ import org.bukkit.Material;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Player;
 
 import net.mcblueice.blueorereplacer.BlueOreReplacer;
+import net.mcblueice.blueorereplacer.tracker.BlockStateTracker;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.BiomeMode;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.OreSelection;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.OreType;
@@ -22,7 +24,7 @@ public class OreReplaceUtil {
 	);
 	private static final BlockFace[] FACES = {BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
 
-	private static volatile ChunkModificationTracker tracker;
+	private static volatile BlockStateTracker tracker;
 
 	private static volatile int nearbyOreCheckRadius = 2;
 	private static volatile Set<Material> undergroundSet = Collections.emptySet();
@@ -39,7 +41,7 @@ public class OreReplaceUtil {
 
 	public static void reload() {
 		BlueOreReplacer plugin = BlueOreReplacer.getInstance();
-		tracker = plugin.getChunkTracker();
+		tracker = plugin.getBlockTracker();
 		nearbyOreCheckRadius = plugin.getConfig().getInt("NearbyOreCheckRadius", 2);
 		BlueOreReplacer.sendMessage("§7鄰近礦物檢查半徑已設置為 §e" + nearbyOreCheckRadius);
 
@@ -54,6 +56,10 @@ public class OreReplaceUtil {
     }
 
 	public static void tryReplaceNeighbors(Block centerChanged) {
+		tryReplaceNeighbors(centerChanged, null);
+	}
+
+	public static void tryReplaceNeighbors(Block centerChanged, Player actor) {
 		if (centerChanged == null) return;
 		if (tracker.isModified(centerChanged)) {
 			if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("§c跳過人工(自身)");
@@ -75,7 +81,7 @@ public class OreReplaceUtil {
 				continue;
 			}
 			if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("§a嘗試替換: §7"+ GenericUtil.FaceToChinese(face) + " " + block.getType().name());
-			tryReplace(block, centerChanged, false);
+			tryReplace(block, centerChanged, false, actor);
 		}
 		hideNearbyOres(centerChanged, nearbyOreCheckRadius);
 	}
@@ -99,6 +105,10 @@ public class OreReplaceUtil {
 	}
 
 	public static void tryReplace(Block target, Block exclude, boolean ignoreNearby) {
+		tryReplace(target, exclude, ignoreNearby, null);
+	}
+
+	public static void tryReplace(Block target, Block exclude, boolean ignoreNearby, Player actor) {
 		Environment env = target.getWorld().getEnvironment();
 		if (env != Environment.NORMAL && env != Environment.NETHER) {
 			if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §4錯誤世界 無法生成");
@@ -138,7 +148,7 @@ public class OreReplaceUtil {
 		tracker.markExposed(target);
 
 		Location loc = target.getLocation();
-		OreSelection selection = OreSimulateUtil.getMostLikelyOre(target);
+		OreSelection selection = OreSimulateUtil.getMostLikelyOre(target, actor);
 
 		if (selection == null) {
 			if (hideOres(target)) return;

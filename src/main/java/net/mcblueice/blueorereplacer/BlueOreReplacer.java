@@ -11,16 +11,19 @@ import org.bukkit.entity.Player;
 
 import net.mcblueice.blueorereplacer.utils.ConfigManager;
 import net.mcblueice.blueorereplacer.utils.OreReplaceUtil;
-import net.mcblueice.blueorereplacer.utils.ChunkModificationTracker;
+import net.mcblueice.blueorereplacer.tracker.BlockStateTracker;
 import net.mcblueice.blueorereplacer.listener.BlockChangeListener;
 import net.mcblueice.blueorereplacer.listener.CheckModeListener;
 import net.mcblueice.blueorereplacer.listener.ChunkListener;
+import net.mcblueice.blueorereplacer.listener.PlayerChanceCacheListener;
 
 public final class BlueOreReplacer extends JavaPlugin {
     private static BlueOreReplacer instance;
     private ConfigManager lang;
     private Logger logger;
-    private ChunkModificationTracker chunkTracker;
+    private BlockStateTracker blockTracker;
+    private BlockChangeListener blockChangeListener;
+    private PlayerChanceCacheListener playerChanceCacheListener;
     public static final Set<UUID> checkModePlayers = ConcurrentHashMap.newKeySet();
     public static final Set<UUID> debugModePlayers = ConcurrentHashMap.newKeySet();
     private static final UUID CONSOLE_UUID = new UUID(0L, 0L);
@@ -40,7 +43,7 @@ public final class BlueOreReplacer extends JavaPlugin {
 
         saveDefaultConfig();
         lang = new ConfigManager(this);
-        chunkTracker = new ChunkModificationTracker(this);
+        blockTracker = new BlockStateTracker(this);
 
 		Commands commands = new Commands(this);
         getCommand("blueoreplacer").setExecutor(commands);
@@ -50,9 +53,13 @@ public final class BlueOreReplacer extends JavaPlugin {
         debug = getConfig().getBoolean("Debug", false);
         prefix = lang.get("Prefix");
 
-        getServer().getPluginManager().registerEvents(new BlockChangeListener(this), this);
+        blockChangeListener = new BlockChangeListener(this);
+        getServer().getPluginManager().registerEvents(blockChangeListener, this);
         getServer().getPluginManager().registerEvents(new CheckModeListener(this), this);
         getServer().getPluginManager().registerEvents(new ChunkListener(this), this);
+        playerChanceCacheListener = new PlayerChanceCacheListener(this);
+        getServer().getPluginManager().registerEvents(playerChanceCacheListener, this);
+        playerChanceCacheListener.bootstrap();
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new BlueOreReplacerExpansion(this).register();
@@ -62,15 +69,18 @@ public final class BlueOreReplacer extends JavaPlugin {
         logger.info("BlueOreReplacer 已啟動");
 	}
 
-	@Override
-	public void onDisable() {
-        if (chunkTracker != null) chunkTracker.shutdown();
+    @Override
+    public void onDisable() {
+        if (playerChanceCacheListener != null) playerChanceCacheListener.shutdown();
+        if (blockTracker != null) blockTracker.shutdown();
 		logger.info("BlueOreReplacer 已卸載");
 	}
 
     public static BlueOreReplacer getInstance() { return instance; }
     public ConfigManager getLanguageManager() { return lang; }
-    public ChunkModificationTracker getChunkTracker() { return chunkTracker; }
+    public BlockStateTracker getBlockTracker() { return blockTracker; }
+    public BlockChangeListener getBlockChangeListener() { return blockChangeListener; }
+    public PlayerChanceCacheListener getPlayerChanceCacheListener() { return playerChanceCacheListener; }
 
     public boolean toggleCheckMode(UUID uuid) {
         if (uuid == null) return false;

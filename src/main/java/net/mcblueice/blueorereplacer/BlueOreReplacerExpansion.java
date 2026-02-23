@@ -57,7 +57,7 @@ public class BlueOreReplacerExpansion extends PlaceholderExpansion {
             return "invalid";
         }
         Location loc = player.getLocation();
-        Double probability = OreSimulateUtil.calculateFeatureProbability(loc, featureName, null);
+        Double probability = OreSimulateUtil.calculateFeatureProbability(loc, featureName, null, player);
         if (probability == null) {
             return "N/A";
         }

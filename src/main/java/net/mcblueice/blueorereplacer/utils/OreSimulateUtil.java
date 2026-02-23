@@ -6,15 +6,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 
-import net.mcblueice.blueorereplacer.BlueOreReplacer;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.BiomeMode;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.OreSelection;
 import net.mcblueice.blueorereplacer.utils.GenericUtil.OreType;
 
 public class OreSimulateUtil {
-    private static BlueOreReplacer plugin() { return BlueOreReplacer.getInstance(); }
-
     @SuppressWarnings("unused")
     private static class OreFeature {
         public final String name;
@@ -72,21 +70,13 @@ public class OreSimulateUtil {
          * 計算指定高度在本特徵下生成礦石的機率，考量該高度是否於有效範圍、
          * 分佈權重、礦脈大小與水平擴散等因素。
          */
-        private double pBlockLayer(Location loc) {
+        private double pBlockLayer(Location loc, Player actor) {
             if (loc == null || loc.getWorld() == null) return 0.0;
             int y = loc.getBlockY();
             if (y < yMin || y > yMax) return 0.0;
             if (y < dYMin || y > dYMax) return 0.0;
 
-            String worldName = loc.getWorld().getName();
-            String basePath = "OresGeneration." + worldName + "." + GenericUtil.getOreName(ore, y);
-            if (!plugin().getConfig().getBoolean(basePath + ".enabled", true)) return 0.0;
-
-            double chance = 1.0;
-            Object rawChance = plugin().getConfig().get(basePath + ".chance");
-            if (rawChance instanceof Number num) {
-                chance = num.doubleValue();
-            }
+            double chance = OreChanceResolver.resolveChanceMultiplier(loc, ore, actor);
             if (chance <= 0) return 0.0;
 
             double py = weights[y - dYMin] / activeWeightSum;
@@ -265,6 +255,10 @@ public class OreSimulateUtil {
     }
 
     public static Double calculateFeatureProbability(Location loc, String featureName, BiomeMode overrideBiomeMode) {
+        return calculateFeatureProbability(loc, featureName, overrideBiomeMode, null);
+    }
+
+    public static Double calculateFeatureProbability(Location loc, String featureName, BiomeMode overrideBiomeMode, Player actor) {
         if (loc == null || loc.getWorld() == null) return null;
         if (featureName == null || featureName.isEmpty()) return null;
 
@@ -272,7 +266,7 @@ public class OreSimulateUtil {
         List<OreFeature> features = BiomeModifiers(BASE_FEATURE_SET, biomeMode);
         for (OreFeature feature : features) {
             if (feature.name.equalsIgnoreCase(featureName)) {
-                double probability = feature.pBlockLayer(loc);
+                double probability = feature.pBlockLayer(loc, actor);
                 return (probability >= 0.0) ? probability : 0.0;
             }
         }
@@ -283,6 +277,10 @@ public class OreSimulateUtil {
      * 根據方塊位置挑選最可能生成的礦種與對應礦脈資訊，供實際替換流程使用。
      */
     public static OreSelection getMostLikelyOre(Block block) {
+        return getMostLikelyOre(block, null);
+    }
+
+    public static OreSelection getMostLikelyOre(Block block, Player actor) {
         if (block == null) return null;
 
         Location loc = block.getLocation();
@@ -295,7 +293,7 @@ public class OreSimulateUtil {
         List<FeatureCandidate> candidates = new ArrayList<>();
 
         for (OreFeature feature : features) {
-            double probability = feature.pBlockLayer(loc);
+            double probability = feature.pBlockLayer(loc, actor);
             if (probability <= 0) continue;
 
             double remaining = remainingPerOre.getOrDefault(feature.ore, 1.0);

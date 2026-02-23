@@ -11,7 +11,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.inventory.EquipmentSlot;
 
 import net.mcblueice.blueorereplacer.BlueOreReplacer;
-import net.mcblueice.blueorereplacer.utils.ChunkModificationTracker;
+import net.mcblueice.blueorereplacer.tracker.BlockStateTracker;
 import net.mcblueice.blueorereplacer.utils.TaskScheduler;
 
 public class CheckModeListener implements Listener {
@@ -31,10 +31,10 @@ public class CheckModeListener implements Listener {
         Block block = event.getClickedBlock();
         if (block == null) return;
 
-        var tracker = plugin.getChunkTracker();
+        var tracker = plugin.getBlockTracker();
         if (player.isSneaking()) {
             Chunk chunk = block.getChunk();
-            ChunkModificationTracker.ChunkStats stats = tracker.getChunkStats(chunk);
+            BlockStateTracker.ChunkStats stats = tracker.getChunkStats(chunk);
             var keys = tracker.getChunkPdcKeys(chunk);
             TaskScheduler.runTask(player, plugin, () -> {
                 player.sendMessage("§8========== §b區塊資訊 §8==========");
@@ -55,7 +55,8 @@ public class CheckModeListener implements Listener {
             });
         } else {
             boolean modified = tracker.isModified(block);
-            TaskScheduler.runTask(player, plugin, () -> player.sendMessage(BlueOreReplacer.prefix + "§e世界: §e" + block.getWorld().getName() + " §9座標 §c" + block.getX() + " §a" + block.getY() + " §b" + block.getZ() + " §7狀態: " + (modified ? "§6人工方塊" : "§2自然方塊")));
+            boolean exposed = tracker.isExposed(block);
+            TaskScheduler.runTask(player, plugin, () -> player.sendMessage(BlueOreReplacer.prefix + "§e世界: §e" + block.getWorld().getName() + " §9座標 §c" + block.getX() + " §a" + block.getY() + " §b" + block.getZ() + " §7狀態: " + (modified ? "§6人工方塊(t)" : "§7人工方塊(f)") + " " + (exposed ? "§b暴露方塊(t)" : "§7暴露方塊(f)")));
         }
     }
 }

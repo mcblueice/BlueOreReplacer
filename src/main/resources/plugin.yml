@@ -5,7 +5,7 @@ api-version: 1.20
 author: Blue
 description: "礦物替換插件"
 prefix: BlueOreReplacer
-softdepend: [PlaceholderAPI]
+softdepend: [PlaceholderAPI, LuckPerms]
 folia-supported: true
 commands:
   blueoreplacer:
@@ -22,3 +22,57 @@ permissions:
   blueoreplacer.debug:
     description: 切換調試模式
     default: op
+  blueoreplacer.chance:
+    description: 玩家礦物機率權限節點群組
+    default: false
+    children:
+      blueoreplacer.chance.*: true
+  blueoreplacer.chance.*:
+    description: 所有礦物機率節點 (格式: blueoreplacer.chance.<ORE_ALIAS>.<PERCENT>)
+    default: false
+    children:
+      blueoreplacer.chance.COAL.*: true
+      blueoreplacer.chance.IRON.*: true
+      blueoreplacer.chance.COPPER.*: true
+      blueoreplacer.chance.GOLD.*: true
+      blueoreplacer.chance.REDSTONE.*: true
+      blueoreplacer.chance.EMERALD.*: true
+      blueoreplacer.chance.LAPIS.*: true
+      blueoreplacer.chance.DIAMOND.*: true
+      blueoreplacer.chance.NETHER_GOLD.*: true
+      blueoreplacer.chance.NETHER_QUARTZ.*: true
+      blueoreplacer.chance.ANCIENT_DEBRIS.*: true
+      blueoreplacer.chance.*.*: true
+  blueoreplacer.chance.COAL.*:
+    description: 煤礦機率節點別名 (例如 blueoreplacer.chance.COAL.150)
+    default: false
+  blueoreplacer.chance.IRON.*:
+    description: 鐵礦機率節點別名 (例如 blueoreplacer.chance.IRON.150)
+    default: false
+  blueoreplacer.chance.COPPER.*:
+    description: 銅礦機率節點別名 (例如 blueoreplacer.chance.COPPER.150)
+    default: false
+  blueoreplacer.chance.GOLD.*:
+    description: 金礦機率節點別名 (例如 blueoreplacer.chance.GOLD.150)
+    default: false
+  blueoreplacer.chance.REDSTONE.*:
+    description: 紅石機率節點別名 (例如 blueoreplacer.chance.REDSTONE.150)
+    default: false
+  blueoreplacer.chance.EMERALD.*:
+    description: 綠寶石機率節點別名 (例如 blueoreplacer.chance.EMERALD.150)
+    default: false
+  blueoreplacer.chance.LAPIS.*:
+    description: 青金石機率節點別名 (例如 blueoreplacer.chance.LAPIS.150)
+    default: false
+  blueoreplacer.chance.DIAMOND.*:
+    description: 鑽石機率節點別名 (例如 blueoreplacer.chance.DIAMOND.150)
+    default: false
+  blueoreplacer.chance.NETHER_GOLD.*:
+    description: 地獄金礦機率節點別名 (例如 blueoreplacer.chance.NETHER_GOLD.150)
+    default: false
+  blueoreplacer.chance.NETHER_QUARTZ.*:
+    description: 地獄石英機率節點別名 (例如 blueoreplacer.chance.NETHER_QUARTZ.150)
+    default: false
+  blueoreplacer.chance.ANCIENT_DEBRIS.*:
+    description: 遠古遺骸機率節點 (例如 blueoreplacer.chance.ANCIENT_DEBRIS.150)
+    default: false

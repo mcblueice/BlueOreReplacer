@@ -1,55 +1,31 @@
 Debug: false
 ChunkCache:
   SaveInterval: 30
-NearbyOreCheckRadius: 3
+NearbyOreCheckRadius: 5
 OresGeneration:
   world:
     COAL_ORE:
       enabled: true
       chance: 1
-    DEEPSLATE_COAL_ORE:
-      enabled: true
-      chance: 1
     COPPER_ORE:
-      enabled: true
-      chance: 1
-    DEEPSLATE_COPPER_ORE:
       enabled: true
       chance: 1
     IRON_ORE:
       enabled: true
       chance: 1
-    DEEPSLATE_IRON_ORE:
-      enabled: true
-      chance: 1
     GOLD_ORE:
-      enabled: true
-      chance: 1
-    DEEPSLATE_GOLD_ORE:
       enabled: true
       chance: 1
     LAPIS_ORE:
       enabled: true
       chance: 1
-    DEEPSLATE_LAPIS_ORE:
-      enabled: true
-      chance: 1
     REDSTONE_ORE:
-      enabled: true
-      chance: 1
-    DEEPSLATE_REDSTONE_ORE:
       enabled: true
       chance: 1
     DIAMOND_ORE:
       enabled: true
       chance: 1
-    DEEPSLATE_DIAMOND_ORE:
-      enabled: true
-      chance: 1
     EMERALD_ORE:
-      enabled: true
-      chance: 1
-    DEEPSLATE_EMERALD_ORE:
       enabled: true
       chance: 1
   world_nether:

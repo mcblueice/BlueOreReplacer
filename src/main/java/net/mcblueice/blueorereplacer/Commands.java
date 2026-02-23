@@ -91,20 +91,25 @@ public class Commands implements CommandExecutor, TabCompleter {
 
                     final String featureName = resolvedFeature;
                     final BiomeMode biomeMode = parsedBiomeMode;
+                    final Player simulateActor = player;
                     Runnable simulateTask = () -> {
-                        Double prob = OreSimulateUtil.calculateFeatureProbability(Loc, featureName, biomeMode);
-                        if (prob == null) {
+                        Double baseProb = OreSimulateUtil.calculateFeatureProbability(Loc, featureName, biomeMode, null);
+                        if (baseProb == null) {
                             sender.sendMessage(BlueOreReplacer.prefix + "§7該生態域下此礦物特徵無生成機率: §cN/A");
                             return;
                         }
-                        double pctEff = Math.max(0, prob) * 100.0;
+
+                        Double selfProb = OreSimulateUtil.calculateFeatureProbability(Loc, featureName, biomeMode, simulateActor);
+                        double pctBase = Math.max(0, baseProb) * 100.0;
+                        String selfPctText = (selfProb == null) ? "N/A" : String.format(java.util.Locale.US, "%.3f", Math.max(0, selfProb) * 100.0) + "%";
                         Integer veinSize = OreSimulateUtil.getFeatureVeinSize(featureName, Loc, biomeMode);
                         sender.sendMessage(BlueOreReplacer.prefix + "§b模擬結果 §7| §e特徵: §6" + featureName
                                 + " §7| §3世界: §b" + world.getName()
                                 + " §7| §d生態域: §5" + biomeMode.name().toLowerCase()
                                 + " §7| §9Y: §a" + ySim
                                 + (veinSize != null ? " §7| §6礦脈大小: §e" + veinSize : "")
-                                + " §7| §6生成機率: §e" + String.format(java.util.Locale.US, "%.3f", pctEff) + "%");
+                                + " §7| §6原始機率: §e" + String.format(java.util.Locale.US, "%.3f", pctBase) + "%"
+                                + " §7| §6玩家機率: §e" + selfPctText);
                     };
                     if (player != null) {
                         TaskScheduler.runTask(player, plugin, simulateTask);
@@ -119,6 +124,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     }
                     plugin.reloadConfig();
                     plugin.getLanguageManager().reload();
+                    plugin.getPlayerChanceCacheListener().reload();
                     OreReplaceUtil.reload();
                     plugin.setDebugMode(plugin.getConfig().getBoolean("Debug", false));
                     plugin.setPrefix(plugin.getLanguageManager().get("Prefix"));
@@ -170,7 +176,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     int fx = x, fy = y, fz = z;
                     Runnable checkTask = () -> {
                         Block target = world.getBlockAt(fx, fy, fz);
-                        boolean modified = plugin.getChunkTracker().isModified(target);
+                        boolean modified = plugin.getBlockTracker().isModified(target);
                         sender.sendMessage(BlueOreReplacer.prefix + "§e世界: §e" + world.getName() + " §9座標: §c" + fx + " §a" + fy + " §b" + fz + " §7狀態: " + (modified ? "§6人工方塊" : "§2自然方塊"));
                     };
                     if (refPlayer != null) {
@@ -190,7 +196,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                             return true;
                         }
                         var ch = p.getLocation().getChunk();
-                        plugin.getChunkTracker().clear(ch);
+                        plugin.getBlockTracker().clear(ch);
                         sender.sendMessage(BlueOreReplacer.prefix + "§a已清除當前區塊 PDC:" + ch.getX() + "," + ch.getZ());
                         return true;
                     }
@@ -216,7 +222,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                         int cz = qz >> 4;
                         Runnable clearTask = () -> {
                             var ch = world.getChunkAt(cx, cz);
-                            plugin.getChunkTracker().clear(ch);
+                            plugin.getBlockTracker().clear(ch);
                             sender.sendMessage(BlueOreReplacer.prefix + "§a已清除區塊 PDC：" + ch.getX() + "," + ch.getZ() + " @ " + world.getName());
                         };
                         if (player != null) {
@@ -243,11 +249,11 @@ public class Commands implements CommandExecutor, TabCompleter {
                     }
                     return true;
                 default:
-                    sender.sendMessage(BlueOreReplacer.prefix + "§c用法錯誤 | /blueoreplacer reload|debug|check|clear");
+                    sender.sendMessage(BlueOreReplacer.prefix + "§c用法錯誤 | /blueoreplacer reload|debug|check|clear|simulate");
                     return true;
             }
         }
-        sender.sendMessage(BlueOreReplacer.prefix + "§c用法錯誤 | /blueoreplacer reload|debug|check|clear");
+        sender.sendMessage(BlueOreReplacer.prefix + "§c用法錯誤 | /blueoreplacer reload|debug|check|clear|simulate");
         return true;
     }
 

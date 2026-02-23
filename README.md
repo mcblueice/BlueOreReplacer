@@ -27,6 +27,23 @@
 |----------|------|
 | `%blueorereplacer_simulate_chance_<OreFeature>%` | 取得玩家所在地對應礦物特徵的生成機率(百分比) |
 
+## 機率權限節點
+
+- 格式: `blueoreplacer.chance.<ALIAS>.<PERCENT>`
+- 範例: `blueoreplacer.chance.DIAMOND.150` (增加乘數 +1.5；最終乘數 = `configChance + 1.5`)
+- 可用別名:
+	- `COAL`
+	- `IRON`
+	- `COPPER`
+	- `GOLD`
+	- `REDSTONE`
+	- `EMERALD`
+	- `LAPIS`
+	- `DIAMOND`
+	- `NETHER_GOLD`
+	- `NETHER_QUARTZ`
+	- `ANCIENT_DEBRIS`
+
 ## 礦物特徵列表
 
 | 礦物特徵 | 描述 |
@@ -45,10 +62,10 @@
 | `redstone_main` | 紅石主分佈，集中於 -64 至 -32 的三角型產量 |
 | `redstone_alt` | 紅石平均分佈，延伸至 16 高度 |
 | `emerald_mountain` | 綠寶石山地分佈，只在山地/滴石山地生成 |
-| `diamond_cluster_common` | 鑽石普通團簇，含露天懲罰的標準鑽石 vein |
-| `diamond_cluster_buried` | 鑽石掩埋團簇，只在深層覆蓋石內生成 |
-| `diamond_cluster_large` | 鑽石大型團簇，稀有但礦脈巨大 |
-| `diamond_cluster_medium` | 鑽石中型團簇，固定高度區間的平均分布 |
+| `diamond_main` | 鑽石主分佈，含露天懲罰的標準鑽石礦脈 |
+| `diamond_buried` | 鑽石掩埋分佈，只在深層覆蓋石內生成 |
+| `diamond_large` | 鑽石大型分佈，稀有但礦脈較大 |
+| `diamond_medium` | 鑽石中型分佈，固定高度區間的平均分布 |
 | `nether_quartz_main` | 地獄石英礦主分佈，覆蓋地獄大部分高度 |
 | `nether_gold_main` | 地獄金礦主分佈，與石英礦高度範圍相同 |
 | `debris_main` | 遠古遺骸主分佈，集中於 Y 8–24 的三角型分布 |
