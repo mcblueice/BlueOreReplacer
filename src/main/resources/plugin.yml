@@ -1,5 +1,5 @@
 name: BlueOreReplacer
-version: '${project.version}'
+version: "${project.version}"
 main: net.mcblueice.blueorereplacer.BlueOreReplacer
 api-version: 1.20
 author: Blue
@@ -28,7 +28,7 @@ permissions:
     children:
       blueoreplacer.chance.*: true
   blueoreplacer.chance.*:
-    description: 所有礦物機率節點 (格式: blueoreplacer.chance.<ORE_ALIAS>.<PERCENT>)
+    description: "所有礦物機率節點 (格式: blueoreplacer.chance.<ORE_ALIAS>.<PERCENT>)"
     default: false
     children:
       blueoreplacer.chance.COAL.*: true

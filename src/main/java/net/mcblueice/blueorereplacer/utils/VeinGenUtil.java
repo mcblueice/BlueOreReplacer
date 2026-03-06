@@ -355,6 +355,7 @@ public final class VeinGenUtil {
             if (tracker.isModified(neighbor)) return false;
         }
 
+        if (OreReplaceUtil.CANT_REPLACE_BLOCKS.contains(mat)) return false;
         b.setType(targetType, false);
         tracker.markModified(b);
         return true;

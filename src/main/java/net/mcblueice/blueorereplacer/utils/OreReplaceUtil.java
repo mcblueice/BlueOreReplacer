@@ -28,6 +28,7 @@ public class OreReplaceUtil {
 
 	private static volatile int nearbyOreCheckRadius = 2;
 	private static volatile Set<Material> undergroundSet = Collections.emptySet();
+	public static final Set<Material> CANT_REPLACE_BLOCKS = EnumSet.of(Material.BEDROCK);
 
 	private static final Set<Material> STONE_CANDIDATES = EnumSet.of(
 			//overworld
@@ -49,7 +50,7 @@ public class OreReplaceUtil {
 		EnumSet<Material> undergroundBlockSet = EnumSet.noneOf(Material.class);
 		for (String str : undergroundBlocks) {
             Material mat = Material.matchMaterial(str);
-            if (mat != null) undergroundBlockSet.add(mat);
+			if (mat != null) undergroundBlockSet.add(mat);
         }
 		undergroundSet = Collections.unmodifiableSet(undergroundBlockSet);
 		BlueOreReplacer.sendMessage("§7地下方塊緩存已更新 共 §e" + undergroundBlockSet.size() + " §7種材質");
@@ -110,6 +111,7 @@ public class OreReplaceUtil {
 
 	public static void tryReplace(Block target, Block exclude, boolean ignoreNearby, Player actor) {
 		Environment env = target.getWorld().getEnvironment();
+		if (CANT_REPLACE_BLOCKS.contains(target.getType())) return;
 		if (env != Environment.NORMAL && env != Environment.NETHER) {
 			if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §4錯誤世界 無法生成");
 			return;
@@ -252,19 +254,19 @@ public class OreReplaceUtil {
 		}
 		if (fallback == null) {
 			switch (target.getWorld().getEnvironment()) {
-			case NETHER:
-				fallback = Material.NETHERRACK;
-				break;
-			case NORMAL:
-				if (target.getY() < 0) {
-					fallback = Material.DEEPSLATE;
-				} else {
+				case NETHER:
+					fallback = Material.NETHERRACK;
+					break;
+				case NORMAL:
+					if (target.getY() < 0) {
+						fallback = Material.DEEPSLATE;
+					} else {
+						fallback = Material.STONE;
+					}
+					break;
+				default:
 					fallback = Material.STONE;
-				}
-				break;
-			default:
-				fallback = Material.STONE;
-				break;
+					break;
 			}
 		}
 		if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug("  §b整脈隱藏為: §7" + fallback.name());
@@ -273,8 +275,8 @@ public class OreReplaceUtil {
 	}
 
 	private static boolean isUnderground(Material material) {
-        return undergroundSet.contains(material);
-    }
+		return undergroundSet.contains(material);
+	}
 
 	private static boolean isOre(Material m) {
 		return m.name().endsWith("_ORE") || m == Material.ANCIENT_DEBRIS;
