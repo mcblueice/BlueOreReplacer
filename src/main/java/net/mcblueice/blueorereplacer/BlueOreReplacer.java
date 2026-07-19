@@ -15,6 +15,7 @@ import net.mcblueice.blueorereplacer.tracker.BlockStateTracker;
 import net.mcblueice.blueorereplacer.listener.BlockChangeListener;
 import net.mcblueice.blueorereplacer.listener.CheckModeListener;
 import net.mcblueice.blueorereplacer.listener.ChunkListener;
+import net.mcblueice.blueorereplacer.listener.ChunkRegeneratedListener;
 import net.mcblueice.blueorereplacer.listener.PlayerChanceCacheListener;
 
 public final class BlueOreReplacer extends JavaPlugin {
@@ -61,6 +62,10 @@ public final class BlueOreReplacer extends JavaPlugin {
         getServer().getPluginManager().registerEvents(playerChanceCacheListener, this);
         playerChanceCacheListener.bootstrap();
 
+        if (Bukkit.getPluginManager().getPlugin("BlueRevive") != null) {
+            logger.info("已註冊 BlueRevive 擴展");
+            getServer().getPluginManager().registerEvents(new ChunkRegeneratedListener(this), this);
+        }
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new BlueOreReplacerExpansion(this).register();
             logger.info("已註冊 PlaceholderAPI 擴展");

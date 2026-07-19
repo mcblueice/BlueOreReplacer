@@ -5,7 +5,7 @@ api-version: 1.20
 author: Blue
 description: "礦物替換插件"
 prefix: BlueOreReplacer
-softdepend: [PlaceholderAPI, LuckPerms]
+softdepend: [PlaceholderAPI, LuckPerms, BlueRevive]
 folia-supported: true
 commands:
   blueoreplacer:

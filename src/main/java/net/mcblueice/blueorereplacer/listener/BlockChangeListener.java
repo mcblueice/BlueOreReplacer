@@ -2,9 +2,10 @@ package net.mcblueice.blueorereplacer.listener;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
@@ -30,15 +31,19 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.projectiles.ProjectileSource;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+
 import net.mcblueice.blueorereplacer.BlueOreReplacer;
 import net.mcblueice.blueorereplacer.utils.OreReplaceUtil;
 
 
 public class BlockChangeListener implements Listener {
-    private static final long INTERACT_CACHE_TTL_MILLIS = 3000L;
-
-    private final ConcurrentHashMap<BlockCacheKey, CachedActor> blockInteractActorCache = new ConcurrentHashMap<>();
     private final BlueOreReplacer plugin;
+    private final Cache<BlockCacheKey, UUID> blockInteractActorCache = CacheBuilder.newBuilder()
+        .expireAfterWrite(3, TimeUnit.SECONDS)
+        .maximumSize(10000)
+        .build();
 
     public BlockChangeListener(BlueOreReplacer plugin) {
         this.plugin = plugin;
@@ -51,6 +56,7 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         Block block = event.getBlock();
         Location loc = block.getLocation();
         if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
@@ -67,13 +73,14 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (event.getHand() != EquipmentSlot.HAND) return;
 
         Block clicked = event.getClickedBlock();
         Player player = event.getPlayer();
         if (clicked == null || player == null) return;
-
+        
         Block cacheTarget = null;
         Material clickedType = clicked.getType();
         if (clickedType == Material.RESPAWN_ANCHOR) {
@@ -88,28 +95,24 @@ public class BlockChangeListener implements Listener {
             return;
         }
 
-        long now = System.currentTimeMillis();
-        BlockCacheKey key = BlockCacheKey.of(cacheTarget);
+        BlockCacheKey key = Objects.requireNonNull(BlockCacheKey.of(cacheTarget));
+        blockInteractActorCache.put(key, Objects.requireNonNull(player.getUniqueId()));
 
-        CachedActor existing = blockInteractActorCache.get(key);
-        if (existing != null && existing.expiresAtMillis > now) return;
-
-        blockInteractActorCache.put(key, new CachedActor(player.getUniqueId(), now + INTERACT_CACHE_TTL_MILLIS));
         if (BlueOreReplacer.debug) {
             BlueOreReplacer.sendDebug(String.format(
-                "互動快取寫入: §6%s §7@ §9%s §c%d §a%d §b%d §7TTL: §e%dms",
+                "互動快取寫入: §6%s §7@ §9%s §c%d §a%d §b%d §7(Guava TTL: 3s)",
                 player.getName(),
                 cacheTarget.getWorld().getName(),
                 cacheTarget.getX(),
                 cacheTarget.getY(),
-                cacheTarget.getZ(),
-                INTERACT_CACHE_TTL_MILLIS
+                cacheTarget.getZ()
             ));
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         Block block = event.getBlock();
         Location loc = block.getLocation();
         Entity entity = event.getEntity();
@@ -128,6 +131,7 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void protectBlocksBeforeEntityExplode(EntityExplodeEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         event.blockList().removeIf(block -> {
             return block.getType().equals(Material.ANCIENT_DEBRIS);
         });
@@ -135,6 +139,7 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         Entity entity = event.getEntity();
         Location  loc = entity.getLocation();
         Player actor = null;
@@ -189,6 +194,7 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void protectBlocksBeforeBlockExplode(BlockExplodeEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         event.blockList().removeIf(block -> {
             return block.getType().equals(Material.ANCIENT_DEBRIS);
         });
@@ -196,15 +202,16 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         Block sourceBlock = event.getBlock();
         Location loc = sourceBlock.getLocation();
         Player actor = null;
-        long now = System.currentTimeMillis();
-        BlockCacheKey blockKey = BlockCacheKey.of(sourceBlock);
-        CachedActor cached = blockInteractActorCache.get(blockKey);
-        if (cached != null) {
-            if (cached.expiresAtMillis < now) blockInteractActorCache.remove(blockKey, cached);
-            else actor = plugin.getServer().getPlayer(cached.actorUuid);
+        
+        BlockCacheKey blockKey = Objects.requireNonNull(BlockCacheKey.of(sourceBlock));
+        UUID actorUuid = blockInteractActorCache.getIfPresent(blockKey);
+        if (actorUuid != null) {
+            actor = plugin.getServer().getPlayer(actorUuid);
+            blockInteractActorCache.invalidate(blockKey); 
         }
 
         List<Block> explodedBlocks = event.blockList();
@@ -252,6 +259,7 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPistonExtend(BlockPistonExtendEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         event.getBlocks().forEach(block -> {
             Location loc = block.getLocation();
             if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
@@ -269,6 +277,7 @@ public class BlockChangeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPistonRetract(BlockPistonRetractEvent event) {
+        if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
         event.getBlocks().forEach(block -> {
             Location loc = block.getLocation();
             if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
@@ -284,12 +293,6 @@ public class BlockChangeListener implements Listener {
         });
     }
 
-    public void clearInteractActorCacheForChunk(UUID worldUuid, int chunkX, int chunkZ) {
-        blockInteractActorCache.keySet().removeIf(key ->
-            key.worldUuid().equals(worldUuid) && (key.x() >> 4) == chunkX && (key.z() >> 4) == chunkZ
-        );
-    }
-
     private long encode(int x, int y, int z) {
         return (((long)x & 0x3FFFFFFL) << 38) | (((long)z & 0x3FFFFFFL) << 12) | ((long)y & 0xFFFL);
     }
@@ -297,16 +300,6 @@ public class BlockChangeListener implements Listener {
     private record BlockCacheKey(UUID worldUuid, int x, int y, int z) {
         private static BlockCacheKey of(Block block) {
             return new BlockCacheKey(block.getWorld().getUID(), block.getX(), block.getY(), block.getZ());
-        }
-    }
-
-    private static final class CachedActor {
-        private final UUID actorUuid;
-        private final long expiresAtMillis;
-
-        private CachedActor(UUID actorUuid, long expiresAtMillis) {
-            this.actorUuid = actorUuid;
-            this.expiresAtMillis = expiresAtMillis;
         }
     }
 }

@@ -22,8 +22,6 @@ public class OreSimulateUtil {
         public final int yMin;
         public final int yMax;
         public final String distType;
-        public final double k;
-        public final int hSpread;
         public final String biomeTag;
         public double multiplier;
         public final int dYMin;
@@ -34,8 +32,7 @@ public class OreSimulateUtil {
         public OreFeature(String name, OreType ore, int veinSize, double count,
                           int yMin, int yMax, // 生成範圍
                           int dYMin, int dYMax, // 計算範圍
-                          String distType, double k,
-                          int hSpread, String biomeTag, double multiplier) {
+                          String distType, String biomeTag, double multiplier) {
             this.name = name;
             this.ore = ore;
             this.veinSize = veinSize;
@@ -45,8 +42,6 @@ public class OreSimulateUtil {
             this.dYMin = dYMin;
             this.dYMax = dYMax;
             this.distType = distType;
-            this.k = k;
-            this.hSpread = hSpread;
             this.biomeTag = biomeTag;
             this.multiplier = multiplier;
 
@@ -80,7 +75,7 @@ public class OreSimulateUtil {
             if (chance <= 0) return 0.0;
 
             double py = weights[y - dYMin] / activeWeightSum;
-            double baseProbability = count * multiplier * py * (k / hSpread) / 256.0;
+            double baseProbability = count * multiplier * py / 256.0;
             return baseProbability * chance;
         }
     }
@@ -97,46 +92,46 @@ public class OreSimulateUtil {
         List<OreFeature> features = new ArrayList<>();
 
         // 煤礦: 主分佈(三角) + 高海拔(平均)
-        features.add(new OreFeature("coal_main", OreType.COAL_ORE, 17, 20, 0, 192, 0, 192, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("coal_alt", OreType.COAL_ORE, 17, 30, 136, 256, 136, 256, "uniform", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("coal_main", OreType.COAL_ORE, 17, 20, 0, 192, 0, 192, "tri", "generic", 1.0));
+        features.add(new OreFeature("coal_alt", OreType.COAL_ORE, 17, 30, 136, 256, 136, 256, "uniform", "generic", 1.0));
 
         // 鐵礦: 主分佈(三角) + 高海拔(三角) + 平均分佈(平均)
-        features.add(new OreFeature("iron_main", OreType.IRON_ORE, 9, 10, -24, 56, -24, 56, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("iron_high", OreType.IRON_ORE, 9, 90, 80, 256, 80, 384, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("iron_alt", OreType.IRON_ORE, 4, 10, -64, 72, -64, 72, "uniform", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("iron_main", OreType.IRON_ORE, 9, 10, -24, 56, -24, 56, "tri", "generic", 1.0));
+        features.add(new OreFeature("iron_high", OreType.IRON_ORE, 9, 90, 80, 256, 80, 384, "tri", "generic", 1.0));
+        features.add(new OreFeature("iron_alt", OreType.IRON_ORE, 4, 10, -64, 72, -64, 72, "uniform", "generic", 1.0));
 
         // 銅礦: 主分佈(三角)
-        features.add(new OreFeature("copper_main", OreType.COPPER_ORE, 10, 16, -16, 112, -16, 112, "tri", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("copper_main", OreType.COPPER_ORE, 10, 16, -16, 112, -16, 112, "tri", "generic", 1.0));
 
         // 金礦: 主分佈(三角) + 惡地附加(平均)
-        features.add(new OreFeature("gold_main", OreType.GOLD_ORE, 9, 4, -64, 32, -64, 32, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("gold_alt", OreType.GOLD_ORE, 9, 0.5, -64, -48, -64, -48, "uniform", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("gold_badlands_extra", OreType.GOLD_ORE, 9, 50, 32, 256, 32, 256, "uniform", 0.9, 3, "badlands", 1.0));
+        features.add(new OreFeature("gold_main", OreType.GOLD_ORE, 9, 4, -64, 32, -64, 32, "tri", "generic", 1.0));
+        features.add(new OreFeature("gold_alt", OreType.GOLD_ORE, 9, 0.5, -64, -48, -64, -48, "uniform", "generic", 1.0));
+        features.add(new OreFeature("gold_badlands_extra", OreType.GOLD_ORE, 9, 50, 32, 256, 32, 256, "uniform", "badlands", 1.0));
 
         // 青金石: 主分佈(三角) + 平均分佈(平均)
-        features.add(new OreFeature("lapis_main", OreType.LAPIS_ORE, 7, 2, -32, 32, -32, 32, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("lapis_alt", OreType.LAPIS_ORE, 7, 4, -64, 64, -64, 64, "uniform", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("lapis_main", OreType.LAPIS_ORE, 7, 2, -32, 32, -32, 32, "tri", "generic", 1.0));
+        features.add(new OreFeature("lapis_alt", OreType.LAPIS_ORE, 7, 4, -64, 64, -64, 64, "uniform", "generic", 1.0));
 
         // 紅石: 主分佈(三角) + 平均分佈(平均)
-        features.add(new OreFeature("redstone_main", OreType.REDSTONE_ORE, 8, 8, -64, -32, -96, -32, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("redstone_alt", OreType.REDSTONE_ORE, 8, 4, -64, 16, -64, 16, "uniform", 0.9, 3, "generic", 1.0));
+        features.add(new OreFeature("redstone_main", OreType.REDSTONE_ORE, 8, 8, -64, -32, -96, -32, "tri", "generic", 1.0));
+        features.add(new OreFeature("redstone_alt", OreType.REDSTONE_ORE, 8, 4, -64, 16, -64, 16, "uniform", "generic", 1.0));
 
         // 綠寶石: 主分佈(三角)
-        features.add(new OreFeature("emerald_mountain", OreType.EMERALD_ORE, 3, 100, -16, 256, -16, 480, "tri", 0.9, 3, "mountain", 1.0));
+        features.add(new OreFeature("emerald_mountain", OreType.EMERALD_ORE, 3, 100, -16, 256, -16, 480, "tri", "mountain", 1.0));
 
         // 鑽石: 主分佈(三角) + 掩埋分佈(三角) + 大礦分佈(三角) + 中礦分佈(均勻)
-        features.add(new OreFeature("diamond_main", OreType.DIAMOND_ORE, 4, 7, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 0.5));
-        features.add(new OreFeature("diamond_buried", OreType.DIAMOND_ORE, 8, 4, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 1.0));
-        features.add(new OreFeature("diamond_large", OreType.DIAMOND_ORE, 12, 0.11, -64, 16, -144, 16, "tri", 0.9, 3, "generic", 0.3));
-        features.add(new OreFeature("diamond_medium", OreType.DIAMOND_ORE, 8, 2, -64, -4, -64, -4, "uniform", 0.9, 3, "generic", 0.5));
+        features.add(new OreFeature("diamond_main", OreType.DIAMOND_ORE, 4, 7, -64, 16, -144, 16, "tri", "generic", 0.5));
+        features.add(new OreFeature("diamond_buried", OreType.DIAMOND_ORE, 8, 4, -64, 16, -144, 16, "tri", "generic", 1.0));
+        features.add(new OreFeature("diamond_large", OreType.DIAMOND_ORE, 12, 0.11, -64, 16, -144, 16, "tri", "generic", 0.3));
+        features.add(new OreFeature("diamond_medium", OreType.DIAMOND_ORE, 8, 2, -64, -4, -64, -4, "uniform", "generic", 0.5));
 
         // 石英礦: 主分佈(平均)
-        features.add(new OreFeature("nether_quartz_main", OreType.NETHER_QUARTZ_ORE, 14, 16, 10, 117, 10, 117, "uniform", 0.9, 3, "nether", 1.0));
+        features.add(new OreFeature("nether_quartz_main", OreType.NETHER_QUARTZ_ORE, 14, 16, 10, 117, 10, 117, "uniform", "nether", 1.0));
         // 地獄金礦: 主分佈(平均)
-        features.add(new OreFeature("nether_gold_main", OreType.NETHER_GOLD_ORE, 10, 10, 10, 117, 10, 117, "uniform", 0.9, 3, "nether", 1.0));
+        features.add(new OreFeature("nether_gold_main", OreType.NETHER_GOLD_ORE, 10, 10, 10, 117, 10, 117, "uniform", "nether", 1.0));
         // 遠古遺骸: 主分佈(三角) + 平均分佈(平均)
-        features.add(new OreFeature("debris_main", OreType.ANCIENT_DEBRIS, 3, 1, 8, 24, 8, 24, "tri", 0.9, 3, "nether", 1.0));
-        features.add(new OreFeature("debris_alt", OreType.ANCIENT_DEBRIS, 2, 1, 8, 119, 8, 119, "uniform", 0.9, 3, "nether", 1.0));
+        features.add(new OreFeature("debris_main", OreType.ANCIENT_DEBRIS, 3, 1, 8, 24, 8, 24, "tri", "nether", 1.0));
+        features.add(new OreFeature("debris_alt", OreType.ANCIENT_DEBRIS, 2, 1, 8, 119, 8, 119, "uniform", "nether", 1.0));
 
         return features;
     }

@@ -1,4 +1,5 @@
 Debug: false
+EnableOreReplacer: true
 ChunkCache:
   SaveInterval: 30
 NearbyOreCheckRadius: 5

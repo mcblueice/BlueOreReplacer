@@ -35,3 +35,7 @@
 # Gradle
 .gradle/
 run/
+
+# libs
+/libs
+/lib

@@ -18,10 +18,5 @@ public class ChunkListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChunkUnload(ChunkUnloadEvent event) {
         plugin.getBlockTracker().flushAndInvalidate(event.getChunk());
-        plugin.getBlockChangeListener().clearInteractActorCacheForChunk(
-            event.getWorld().getUID(),
-            event.getChunk().getX(),
-            event.getChunk().getZ()
-        );
     }
 }
