@@ -34,6 +34,9 @@ import org.bukkit.projectiles.ProjectileSource;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+
 import net.mcblueice.blueorereplacer.BlueOreReplacer;
 import net.mcblueice.blueorereplacer.utils.OreReplaceUtil;
 
@@ -100,7 +103,7 @@ public class BlockChangeListener implements Listener {
 
         if (BlueOreReplacer.debug) {
             BlueOreReplacer.sendDebug(String.format(
-                "互動快取寫入: §6%s §7@ §9%s §c%d §a%d §b%d §7(Guava TTL: 3s)",
+                "互動快取寫入: §6%s §7@ §9%s §c%d §a%d §b%d",
                 player.getName(),
                 cacheTarget.getWorld().getName(),
                 cacheTarget.getX(),
@@ -132,9 +135,7 @@ public class BlockChangeListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void protectBlocksBeforeEntityExplode(EntityExplodeEvent event) {
         if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
-        event.blockList().removeIf(block -> {
-            return block.getType().equals(Material.ANCIENT_DEBRIS);
-        });
+        event.blockList().removeIf(block -> block.getType() == Material.ANCIENT_DEBRIS);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -154,7 +155,7 @@ public class BlockChangeListener implements Listener {
         }
 
         List<Block> explodedBlocks = event.blockList();
-        Set<Long> explodedBlockSet = new HashSet<>(explodedBlocks.size() * 2);
+        LongSet explodedBlockSet = new LongOpenHashSet(explodedBlocks.size());
 
         if (BlueOreReplacer.debug) BlueOreReplacer.sendDebug(String.format(
             "實體爆炸: §6%s §7@ §9%s §c%d §a%d §b%d §7影響數: §e%d §7來源: §6%s",
@@ -181,9 +182,7 @@ public class BlockChangeListener implements Listener {
                 long key = encode(nx, ny, nz);
                 if (!explodedBlockSet.contains(key)) {
                     Block neighbor = block.getWorld().getBlockAt(nx, ny, nz);
-                    if (neighbor.getType() != Material.AIR) {
-                        outerEdge.add(neighbor);
-                    }
+                    if (!neighbor.getType().isAir()) outerEdge.add(neighbor);
                 }
             }
         }
@@ -195,9 +194,7 @@ public class BlockChangeListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void protectBlocksBeforeBlockExplode(BlockExplodeEvent event) {
         if (!plugin.getConfig().getBoolean("EnableOreReplacer", true)) return;
-        event.blockList().removeIf(block -> {
-            return block.getType().equals(Material.ANCIENT_DEBRIS);
-        });
+        event.blockList().removeIf(block -> block.getType() == Material.ANCIENT_DEBRIS);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -215,7 +212,7 @@ public class BlockChangeListener implements Listener {
         }
 
         List<Block> explodedBlocks = event.blockList();
-        Set<Long> explodedBlockSet = new HashSet<>(explodedBlocks.size() * 2);
+        LongSet explodedBlockSet = new LongOpenHashSet(explodedBlocks.size());
 
         if (BlueOreReplacer.debug) {
             BlueOreReplacer.sendDebug(String.format(
@@ -245,9 +242,7 @@ public class BlockChangeListener implements Listener {
                 long key = encode(nx, ny, nz);
                 if (!explodedBlockSet.contains(key)) {
                     Block neighbor = block.getWorld().getBlockAt(nx, ny, nz);
-                    if (!neighbor.getType().isAir()) {
-                        outerEdge.add(neighbor);
-                    }
+                    if (!neighbor.getType().isAir()) outerEdge.add(neighbor);
                 }
             }
         }
@@ -294,7 +289,7 @@ public class BlockChangeListener implements Listener {
     }
 
     private long encode(int x, int y, int z) {
-        return (((long)x & 0x3FFFFFFL) << 38) | (((long)z & 0x3FFFFFFL) << 12) | ((long)y & 0xFFFL);
+        return (((long) x & 0x3FFFFFFL) << 38) | (((long) z & 0x3FFFFFFL) << 12) | ((long) y & 0xFFFL);
     }
 
     private record BlockCacheKey(UUID worldUuid, int x, int y, int z) {
